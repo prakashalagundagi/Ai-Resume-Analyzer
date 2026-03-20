@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Resume Analyzer</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>AI Resume Analyzer</h1>
+
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="resume" required>
+
+        <select name="role">
+            <option value="web developer">Web Developer</option>
+            <option value="data analyst">Data Analyst</option>
+            <option value="cyber security">Cyber Security</option>
+        </select>
+
+        <button type="submit">Analyze</button>
+    </form>
+
+    {% if result %}
+        <h2>{{ result }}</h2>
+    {% endif %}
+</body>
+</html>
