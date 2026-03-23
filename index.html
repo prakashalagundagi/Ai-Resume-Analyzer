@@ -1,26 +1,46 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Resume Analyzer</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <h1>AI Resume Analyzer</h1>
 
-    <form method="POST" enctype="multipart/form-data">
-        <input type="file" name="resume" required>
+<div class="container">
+    <div class="card">
+        <h1>🚀 AI Resume Analyzer</h1>
+        <p class="subtitle">Upload your resume and get instant analysis</p>
 
-        <select name="role">
-            <option value="web developer">Web Developer</option>
-            <option value="data analyst">Data Analyst</option>
-            <option value="cyber security">Cyber Security</option>
-        </select>
+        <form method="POST" enctype="multipart/form-data">
+            
+            <div class="file-input">
+                <label for="resume">📄 Upload Resume</label>
+                <input type="file" name="resume" required>
+            </div>
 
-        <button type="submit">Analyze</button>
-    </form>
+            <div class="select-box">
+                <label>Select Role</label>
+                <select name="role">
+                    <option value="web developer">Web Developer</option>
+                    <option value="data analyst">Data Analyst</option>
+                    <option value="cyber security">Cyber Security</option>
+                </select>
+            </div>
 
-    {% if result %}
-        <h2>{{ result }}</h2>
-    {% endif %}
+            <button type="submit">Analyze Resume</button>
+        </form>
+
+        {% if result %}
+            <div class="result-box">
+                <h2>Result</h2>
+                <p>{{ result }}</p>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+
 </body>
-</html>
+    </html>
