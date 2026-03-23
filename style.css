@@ -1,17 +1,98 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
 body {
-    font-family: Arial;
-    text-align: center;
-    margin-top: 50px;
+    height: 100vh;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-form {
-    margin: 20px;
+/* Main Container */
+.container {
+    width: 100%;
+    max-width: 450px;
+    padding: 20px;
 }
 
-button {
-    padding: 10px 20px;
-    background-color: blue;
+/* Card */
+.card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    padding: 30px;
+    border-radius: 15px;
     color: white;
-    border: none;
-    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    text-align: center;
 }
+
+/* Title */
+h1 {
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    font-size: 14px;
+    margin-bottom: 20px;
+    opacity: 0.8;
+}
+
+/* File Input */
+.file-input {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.file-input input {
+    width: 100%;
+    margin-top: 5px;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+}
+
+/* Select */
+.select-box {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.select-box select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    margin-top: 5px;
+}
+
+/* Button */
+button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: #00c6ff;
+    background: linear-gradient(45deg, #00c6ff, #0072ff);
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+/* Result Box */
+.result-box {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.3);
+        }
