@@ -37,7 +37,7 @@ ai-resume-analyzer/
 🔧 Installation & Setup
 
 1️⃣ Clone the repository
-git clone https://github.com/your-username/ai-resume-analyzer.git
+git clone https://github.com/prakashalagundagi/ai-resume-analyzer.git
 cd ai-resume-analyzer
 2️⃣ Install dependencies
 pip install -r requirements.txt
