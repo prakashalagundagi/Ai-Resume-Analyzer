@@ -3,39 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Resume Analyzer</title>
+    <title>AI Resume Analyzer - Premium Multi-Functional</title>
     <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
 <div class="container">
     <div class="card">
-        <h1>🚀 AI Resume Analyzer</h1>
-        <p class="subtitle">Upload your resume and get instant analysis</p>
+        <h1>🚀 AI Resume Analyzer Premium</h1>
+        <p class="subtitle">Advanced AI-powered resume analysis with career coaching, ATS optimization, and job matching</p>
 
         <form method="POST" enctype="multipart/form-data">
             
             <div class="file-input">
-                <label for="resume">📄 Upload Resume</label>
-                <input type="file" name="resume" required>
+                <label for="resume">📄 Upload Resume (PDF)</label>
+                <input type="file" name="resume" required accept=".pdf">
             </div>
 
             <div class="select-box">
-                <label>Select Role</label>
+                <label>Select Target Role (Optional - Auto-detection available)</label>
                 <select name="role">
+                    <option value="">Auto-detect Best Role</option>
                     <option value="web developer">Web Developer</option>
                     <option value="data analyst">Data Analyst</option>
                     <option value="cyber security">Cyber Security</option>
+                    <option value="software engineer">Software Engineer</option>
+                    <option value="product manager">Product Manager</option>
                 </select>
             </div>
 
-            <button type="submit">Analyze Resume</button>
+            <button type="submit">
+                <i class="fas fa-magic"></i> Advanced Analysis
+            </button>
         </form>
 
         {% if result %}
             <div class="result-box">
-                <h2>Result</h2>
-                <p>{{ result }}</p>
+                <h2>📊 Comprehensive Analysis Results</h2>
+                <div>{{ result|safe }}</div>
+            </div>
+        {% endif %}
+
+        {% if skill_gaps %}
+            <div class="skill-gaps">
+                <h3>🎯 Skill Gap Analysis & Learning Path</h3>
+                {% for gap in skill_gaps %}
+                    <div class="gap-item">
+                        <div class="gap-header">
+                            <span class="skill-name">{{ gap.skill.title() }}</span>
+                            <span class="priority-badge priority-{{ gap.priority.lower() }}">{{ gap.priority }}</span>
+                        </div>
+                        <div class="learning-resources">
+                            <strong>Recommended Resources:</strong>
+                            <ul>
+                                {% for resource in gap.resources %}
+                                    <li>{{ resource }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if career_path %}
+            <div class="career-path">
+                <h3>📈 Career Progression Path</h3>
+                <div class="path-grid">
+                    <div class="path-section">
+                        <h4>Current Level: {{ career_path.current_level }}</h4>
+                        <div class="position-list">
+                            {% for pos in career_path.current_positions %}
+                                <span class="position-badge">{{ pos }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% if career_path.next_level %}
+                        <div class="path-arrow">→</div>
+                        <div class="path-section">
+                            <h4>Next Level: {{ career_path.next_level }}</h4>
+                            <div class="position-list">
+                                {% for pos in career_path.next_positions %}
+                                    <span class="position-badge">{{ pos }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                {% if career_path.skills_needed %}
+                    <div class="skills-needed">
+                        <strong>Skills to develop for next level:</strong>
+                        {{ career_path.skills_needed|join(', ') }}
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% if ats_check %}
+            <div class="ats-check">
+                <h3>🤖 ATS Compatibility Check</h3>
+                <div class="ats-score">
+                    <div class="score-circle {{ 'compatible' if ats_check.is_compatible else 'incompatible' }}">
+                        {{ ats_check.score }}/100
+                    </div>
+                    <span class="ats-status">{{ '✅ ATS Optimized' if ats_check.is_compatible else '⚠️ Needs Optimization' }}</span>
+                </div>
+                {% if ats_check.issues %}
+                    <div class="ats-issues">
+                        <h4>Recommended Improvements:</h4>
+                        <ul>
+                            {% for issue in ats_check.issues %}
+                                <li>{{ issue }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% if interview_prep %}
+            <div class="interview-prep">
+                <h3>� Interview Preparation</h3>
+                <div class="questions-section">
+                    <h4>Practice Questions:</h4>
+                    <ol>
+                        {% for question in interview_prep.questions %}
+                            <li>{{ question }}</li>
+                        {% endfor %}
+                    </ol>
+                </div>
+                {% if interview_prep.tips %}
+                    <div class="interview-tips">
+                        <h4>Interview Tips:</h4>
+                        {% for tip in interview_prep.tips %}
+                            <div class="tip-item">💡 {{ tip }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% if job_recommendations %}
+            <div class="job-recommendations">
+                <h3>🎯 Personalized Job Recommendations</h3>
+                {% for job in job_recommendations %}
+                    <div class="job-item">
+                        <div class="job-title">{{ job.title }}</div>
+                        <div class="job-company">{{ job.company }} • {{ job.location }}</div>
+                        <div class="job-salary">{{ job.salary }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if analytics %}
+            <div class="analytics-dashboard">
+                <h3>📊 Resume Analytics Dashboard</h3>
+                <div class="analytics-grid">
+                    <div class="metric-card">
+                        <i class="fas fa-file-word"></i>
+                        <div class="metric-value">{{ analytics.word_count }}</div>
+                        <div class="metric-label">Word Count</div>
+                    </div>
+                    <div class="metric-card">
+                        <i class="fas fa-chart-pie"></i>
+                        <div class="metric-value">{{ analytics.skill_density }}</div>
+                        <div class="metric-label">Skill Density</div>
+                    </div>
+                    <div class="metric-card">
+                        <i class="fas fa-book-reader"></i>
+                        <div class="metric-value">{{ analytics.readability }}</div>
+                        <div class="metric-label">Readability</div>
+                    </div>
+                    <div class="metric-card">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="metric-value">{{ analytics.completeness }}</div>
+                        <div class="metric-label">Completeness</div>
+                    </div>
+                </div>
             </div>
         {% endif %}
 
@@ -43,4 +190,4 @@
 </div>
 
 </body>
-    </html>
+</html>
