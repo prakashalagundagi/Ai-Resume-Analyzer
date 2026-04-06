@@ -1,228 +1,507 @@
-from flask import Flask, render_template, request, jsonify, session
-import os
-import re
-from PyPDF2 import PdfReader
-from werkzeug.utils import secure_filename
-import random
-from datetime import datetime
-import json
-from collections import Counter
-import math
+import streamlit as st
+import pandas as pd
+import numpy as np
+from utils.resume_parser import extract_resume_info
+from utils.analyzer import analyze_resume, calculate_score, predict_field
+import plotly.express as px
+import plotly.graph_objects as go
+from PIL import Image
+import io
 
-app = Flask(__name__)
-app.secret_key = 'your_premium_resume_analyzer_secret_key_2024'
+# ═══════════════════════════════════════════════════════════════════
+#  🎨 PAGE CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════
+st.set_page_config(
+    page_title="🤖 AI Resume Analyzer Pro",
+    page_icon="🤖",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# 📁 Config
-UPLOAD_FOLDER = "resumes"
-ALLOWED_EXTENSIONS = {'pdf'}
-MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
-
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-# 📄 Extract text from PDF
-def extract_text(file_path):
-    text = ""
-    try:
-        reader = PdfReader(file_path)
-        for page in reader.pages:
-            content = page.extract_text()
-            if content:
-                text += content
-    except Exception as e:
-        print("Error reading PDF:", e)
-    return text.lower()
-
-# ✅ Check allowed file
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-# � Multi-language support
-SUPPORTED_LANGUAGES = {
-    'en': 'English',
-    'es': 'Español', 
-    'fr': 'Français',
-    'de': 'Deutsch',
-    'it': 'Italiano',
-    'pt': 'Português',
-    'zh': '中文',
-    'ja': '日本語',
-    'ko': '한국어'
-}
-
-# � Enhanced Job keywords with more comprehensive skills
-job_keywords = {
-    "web developer": {
-        "skills": ["html", "css", "javascript", "react", "vue", "angular", "node.js", "python", "django", "flask", "mongodb", "sql", "git", "aws", "docker"],
-        "experience_keywords": ["year", "years", "experience", "worked", "developed", "built", "created"],
-        "salary_range": (60000, 150000)
-    },
-    "data analyst": {
-        "skills": ["python", "pandas", "numpy", "excel", "sql", "tableau", "power bi", "statistics", "machine learning", "data visualization", "r", "sas"],
-        "experience_keywords": ["year", "years", "experience", "analyzed", "data", "reports", "dashboards"],
-        "salary_range": (55000, 120000)
-    },
-    "cyber security": {
-        "skills": ["network", "security", "encryption", "firewall", "vpn", "siem", "penetration testing", "ethical hacking", "compliance", "risk assessment", "incident response"],
-        "experience_keywords": ["year", "years", "experience", "security", "protected", "monitored", "responded"],
-        "salary_range": (70000, 180000)
-    },
-    "software engineer": {
-        "skills": ["java", "python", "c++", "javascript", "algorithms", "data structures", "git", "agile", "scrum", "testing", "debugging", "api", "microservices"],
-        "experience_keywords": ["year", "years", "experience", "developed", "engineered", "built", "implemented"],
-        "salary_range": (70000, 160000)
-    },
-    "product manager": {
-        "skills": ["product management", "agile", "scrum", "roadmap", "user stories", "analytics", "stakeholder", "leadership", "strategy", "market research"],
-        "experience_keywords": ["year", "years", "experience", "managed", "led", "coordinated", "launched"],
-        "salary_range": (80000, 180000)
+# ═══════════════════════════════════════════════════════════════════
+#  🎨 CUSTOM CSS FOR MODERN UI
+# ═══════════════════════════════════════════════════════════════════
+st.markdown("""
+<style>
+    /* GLOBAL STYLES */
+    [data-testid="stApp"] {
+        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+        min-height: 100vh;
     }
-}
-
-# 📚 Learning resources for skill gap analysis
-learning_resources = {
-    "html": ["MDN Web Docs", "freeCodeCamp", "W3Schools"],
-    "css": ["CSS-Tricks", "Flexbox Froggy", "Grid Garden"],
-    "javascript": ["JavaScript.info", "Eloquent JavaScript", "freeCodeCamp"],
-    "react": ["React Documentation", "React Tutorial", "Scrimba React Course"],
-    "python": ["Python.org Tutorial", "Real Python", "Automate the Boring Stuff"],
-    "pandas": ["Pandas Documentation", "DataCamp Pandas Course", "Kaggle Learn"],
-    "numpy": ["NumPy Documentation", "Real Python NumPy Tutorial"],
-    "machine learning": ["Coursera ML Course", "Fast.ai", "Machine Learning Mastery"],
-    "aws": ["AWS Documentation", "AWS Training Center", "aCloud.guru"],
-    "docker": ["Docker Documentation", "Docker Mastery Course", "Play with Docker"],
-    "git": ["Pro Git Book", "GitHub Learning Lab", "Atlassian Git Tutorial"],
-    "sql": ["SQLBolt", "Mode Analytics SQL Tutorial", "Khan Academy SQL"],
-    "tableau": ["Tableau Training", "Tableau Public", "Data School Tableau"],
-    "agile": ["Agile Alliance", "Scrum.org", "Atlassian Agile Coach"],
-    "leadership": ["Harvard Business Review", "Mind Tools Leadership", "LinkedIn Learning"],
-    "communication": ["Toastmasters", "Coursera Communication Courses", "Udemy Public Speaking"]
-}
-
-# � Interview questions by role
-interview_questions = {
-    "web developer": [
-        "Explain the difference between let, const, and var in JavaScript.",
-        "How do you optimize website performance?",
-        "What's the difference between responsive and adaptive design?",
-        "Explain the CSS Box Model.",
-        "How do you handle browser compatibility issues?"
-    ],
-    "data analyst": [
-        "How do you handle missing data in a dataset?",
-        "Explain the difference between correlation and causation.",
-        "What's your approach to data cleaning?",
-        "How do you choose the right visualization for data?",
-        "Explain what A/B testing is and when to use it."
-    ],
-    "cyber security": [
-        "What's the difference between symmetric and asymmetric encryption?",
-        "How do you respond to a security breach?",
-        "Explain the CIA triad in security.",
-        "What's a zero-day vulnerability?",
-        "How do you secure a web application?"
-    ],
-    "software engineer": [
-        "Explain SOLID principles.",
-        "How do you approach debugging complex issues?",
-        "What's the difference between unit testing and integration testing?",
-        "Explain RESTful API design principles.",
-        "How do you handle technical debt?"
-    ],
-    "product manager": [
-        "How do you prioritize features in a product roadmap?",
-        "Explain your approach to user research.",
-        "How do you handle stakeholder conflicts?",
-        "What metrics do you use to measure product success?",
-        "How do you decide when to kill a feature or product?"
-    ]
-}
-
-# 📈 Career progression paths
-career_paths = {
-    "web developer": {
-        "entry": ["Junior Web Developer", "Frontend Developer", "HTML/CSS Developer"],
-        "mid": ["Web Developer", "Full Stack Developer", "UI/UX Developer"],
-        "senior": ["Senior Web Developer", "Lead Frontend Developer", "Web Architect"],
-        "expert": ["Principal Engineer", "Engineering Manager", "CTO"]
-    },
-    "data analyst": {
-        "entry": ["Junior Data Analyst", "Data Analyst Intern", "Business Analyst"],
-        "mid": ["Data Analyst", "Business Intelligence Analyst", "Marketing Analyst"],
-        "senior": ["Senior Data Analyst", "Lead Data Analyst", "Analytics Manager"],
-        "expert": ["Data Scientist", "Director of Analytics", "VP of Data"]
-    },
-    "cyber security": {
-        "entry": ["Security Analyst", "Junior Penetration Tester", "SOC Analyst"],
-        "mid": ["Security Engineer", "Penetration Tester", "Security Consultant"],
-        "senior": ["Senior Security Engineer", "Security Architect", "InfoSec Manager"],
-        "expert": ["Chief Information Security Officer", "Security Director", "Principal Security Consultant"]
-    },
-    "software engineer": {
-        "entry": ["Junior Software Engineer", "Software Developer", "Associate Engineer"],
-        "mid": ["Software Engineer", "Backend Engineer", "Full Stack Engineer"],
-        "senior": ["Senior Software Engineer", "Lead Engineer", "Staff Engineer"],
-        "expert": ["Principal Engineer", "Engineering Manager", "VP of Engineering"]
-    },
-    "product manager": {
-        "entry": ["Associate Product Manager", "Product Analyst", "Junior PM"],
-        "mid": ["Product Manager", "Technical Product Manager", "Senior Product Manager"],
-        "senior": ["Group Product Manager", "Lead Product Manager", "Product Director"],
-        "expert": ["VP of Product", "Chief Product Officer", "Head of Product"]
+    
+    /* HEADER */
+    .main-header {
+        text-align: center;
+        padding: 2rem 0;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
     }
-}
+    
+    .main-header h1 {
+        color: #ffffff;
+        font-size: 3rem;
+        font-weight: 800;
+        text-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+        margin: 0;
+    }
+    
+    .main-header p {
+        color: #e0e0e0;
+        font-size: 1.2rem;
+        margin-top: 0.5rem;
+    }
+    
+    /* CARDS */
+    .stMetric {
+        background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+        padding: 1.5rem;
+        border-radius: 15px;
+        border: 1px solid rgba(255,255,255,0.2);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        text-align: center;
+    }
+    
+    .stMetric .metric-label {
+        color: #a0a0a0;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .stMetric .metric-value {
+        color: #ffffff;
+        font-size: 2.5rem;
+        font-weight: 800;
+    }
+    
+    /* BUTTONS */
+    .stButton>button {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 30px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        width: 100%;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        background: linear-gradient(90deg, #764ba2 0%, #667eea 100%);
+    }
+    
+    /* SIDEBAR */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    }
+    
+    .sidebar .sidebar-content {
+        background: transparent;
+    }
+    
+    /* PROGRESS BAR */
+    .progress-bar {
+        width: 100%;
+        height: 30px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 15px;
+        overflow: hidden;
+        margin: 1rem 0;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #00c9ff, #92fe9d);
+        border-radius: 15px;
+        transition: width 1s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #000;
+        font-weight: bold;
+    }
+    
+    /* TABLES */
+    .dataframe {
+        background: rgba(255,255,255,0.05);
+        border-radius: 15px;
+        padding: 1rem;
+    }
+    
+    /* EXPANDER */
+    .stExpander {
+        background: rgba(255,255,255,0.05);
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    /* TAGS */
+    .skill-tag {
+        display: inline-block;
+        background: linear-gradient(90deg, #f093fb, #f5576c);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        margin: 3px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    /* ANIMATED ICON */
+    .ai-icon {
+        font-size: 4rem;
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    /* SCROLLBAR */
+    ::-webkit-scrollbar {
+        width: 10px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #1a1a2e;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #667eea, #764ba2);
+        border-radius: 10px;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-# 🏢 Job database with realistic job postings
-job_database = {
-    "web developer": [
-        {"title": "Senior Frontend Developer", "company": "TechCorp Solutions", "salary": "$120,000 - $150,000", "location": "San Francisco, CA"},
-        {"title": "Full Stack Developer", "company": "Digital Innovations", "salary": "$90,000 - $120,000", "location": "New York, NY"},
-        {"title": "React Developer", "company": "StartupHub", "salary": "$80,000 - $110,000", "location": "Austin, TX"},
-        {"title": "JavaScript Engineer", "company": "WebWorks Agency", "salary": "$70,000 - $95,000", "location": "Remote"},
-        {"title": "Vue.js Developer", "company": "Creative Digital", "salary": "$85,000 - $115,000", "location": "Seattle, WA"}
-    ],
-    "data analyst": [
-        {"title": "Senior Data Analyst", "company": "Analytics Pro", "salary": "$95,000 - $120,000", "location": "Chicago, IL"},
-        {"title": "Business Intelligence Analyst", "company": "DataDriven Corp", "salary": "$80,000 - $105,000", "location": "Boston, MA"},
-        {"title": "Data Scientist", "company": "AI Innovations", "salary": "$110,000 - $140,000", "location": "San Jose, CA"},
-        {"title": "Marketing Analyst", "company": "Growth Labs", "salary": "$70,000 - $90,000", "location": "Los Angeles, CA"},
-        {"title": "Financial Analyst", "company": "FinanceTech", "salary": "$85,000 - $110,000", "location": "New York, NY"}
-    ],
-    "cyber security": [
-        {"title": "Security Engineer", "company": "SecureNet Solutions", "salary": "$130,000 - $180,000", "location": "Washington, DC"},
-        {"title": "Penetration Tester", "company": "CyberDefense Inc", "salary": "$100,000 - $140,000", "location": "Remote"},
-        {"title": "Security Analyst", "company": "ProtectTech", "salary": "$85,000 - $115,000", "location": "Dallas, TX"},
-        {"title": "Information Security Manager", "company": "Enterprise Security", "salary": "$140,000 - $180,000", "location": "San Francisco, CA"},
-        {"title": "Compliance Officer", "company": "Regulatory Tech", "salary": "$90,000 - $120,000", "location": "New York, NY"}
-    ],
-    "software engineer": [
-        {"title": "Senior Software Engineer", "company": "Tech Giants Inc", "salary": "$140,000 - $180,000", "location": "Seattle, WA"},
-        {"title": "Backend Engineer", "company": "Cloud Systems", "salary": "$120,000 - $150,000", "location": "San Francisco, CA"},
-        {"title": "DevOps Engineer", "company": "Infrastructure Pro", "salary": "$110,000 - $140,000", "location": "Austin, TX"},
-        {"title": "Mobile Developer", "company": "AppWorks Studio", "salary": "$100,000 - $130,000", "location": "New York, NY"},
-        {"title": "Systems Engineer", "company": "Enterprise Solutions", "salary": "$105,000 - $135,000", "location": "Chicago, IL"}
-    ],
-    "product manager": [
-        {"title": "Senior Product Manager", "company": "ProductLed Co", "salary": "$150,000 - $180,000", "location": "San Francisco, CA"},
-        {"title": "Technical Product Manager", "company": "TechProducts Inc", "salary": "$130,000 - $160,000", "location": "Seattle, WA"},
-        {"title": "Associate Product Manager", "company": "StartupVentures", "salary": "$90,000 - $120,000", "location": "Austin, TX"},
-        {"title": "Product Marketing Manager", "company": "GrowthHackers", "salary": "$100,000 - $130,000", "location": "New York, NY"},
-        {"title": "Platform Product Manager", "company": "CloudPlatform", "salary": "$140,000 - $170,000", "location": "Remote"}
-    ]
-}
+# ═══════════════════════════════════════════════════════════════════
+#  🤖 AI LOGO / ICON
+# ═══════════════════════════════════════════════════════════════════
+st.markdown("""
+<div class="main-header">
+    <div class="ai-icon">🤖</div>
+    <h1>AI Resume Analyzer Pro</h1>
+    <p>🚀 Powered by NLP & Machine Learning | Get Instant Resume Insights</p>
+</div>
+""", unsafe_allow_html=True)
 
-# 🧠 Advanced Resume Analysis
-def extract_experience_level(text):
-    """Extract experience level from resume text"""
-    experience_patterns = [
-        r'(\d+)\+?\s*(?:years?|yrs?)\s*(?:of\s*)?experience',
-        r'(\d+)\s*-\s*(\d+)\s*(?:years?|yrs?)\s*(?:of\s*)?experience',
-        r'experience\s*:\s*(\d+)\+?\s*(?:years?|yrs?)',
-        r'total\s*experience\s*:\s*(\d+)\+?\s*(?:years?|yrs?)'
+# ═══════════════════════════════════════════════════════════════════
+#  📁 SIDEBAR - UPLOAD & SETTINGS
+# ═══════════════════════════════════════════════════════════════════
+with st.sidebar:
+    st.image("https://img.icons8.com/clouds/200/robot-2.png", width=150)
+    st.title("⚙️ Settings")
+    
+    st.markdown("---")
+    
+    st.subheader("📤 Upload Resume")
+    uploaded_file = st.file_uploader(
+        "Drag & Drop your Resume",
+        type=["pdf", "docx", "txt"],
+        help="Supported formats: PDF, DOCX, TXT"
+    )
+    
+    st.markdown("---")
+    
+    st.subheader("🎯 Target Job")
+    target_job = st.selectbox(
+        "Select Job Role",
+        ["Software Engineer", "Data Scientist", "Web Developer",
+         "Mobile Developer", "DevOps Engineer", "Product Manager",
+         "UI/UX Designer", "AI/ML Engineer", "Cybersecurity",
+         "Cloud Architect"]
+    )
+    
+    target_skills = st.text_input(
+        "Target Skills (comma separated)",
+        value="Python, Machine Learning, SQL, AWS",
+        help="Enter skills separated by commas"
+    )
+    
+    st.markdown("---")
+    
+    analyze_btn = st.button("🔍 Analyze Resume", type="primary")
+    
+    st.markdown("---")
+    st.markdown("""
+    <div style='text-align:center; color:#667eea; font-size:0.9rem;'>
+        <b>Version 2.0</b><br>
+        🌟 AI-Powered Analysis
+    </div>
+    """, unsafe_allow_html=True)
+
+# ═══════════════════════════════════════════════════════════════════
+#  🧠 CORE ANALYSIS LOGIC
+# ═══════════════════════════════════════════════════════════════════
+if uploaded_file and analyze_btn:
+    
+    # ── Show Loading ──
+    with st.spinner("🔄 Analyzing your resume with AI..."):
+        import time
+        time.sleep(2)
+    
+    # ── Parse Resume ──
+    resume_data = extract_resume_info(uploaded_file)
+    
+    if resume_data is None:
+        st.error("❌ Could not parse resume. Please try again.")
+        st.stop()
+    
+    # ── Analyze ──
+    analysis_result = analyze_resume(resume_data, target_skills, target_job)
+    score = calculate_score(analysis_result)
+    predicted_field = predict_field(resume_data)
+    
+    # ═══════════════════════════════════════════════════════════════
+    #  📊 RESULTS DASHBOARD
+    # ═══════════════════════════════════════════════════════════════
+    
+    st.markdown("---")
+    st.markdown("## 📊 Analysis Dashboard")
+    
+    # ── Score Cards ──
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric(
+            label="📈 Overall Score",
+            value=f"{score}/100",
+            delta=f"+{score}%"
+        )
+    
+    with col2:
+        st.metric(
+            label="✅ Match %",
+            value=f"{analysis_result['match_percentage']}%",
+            delta=f"Target: {target_job}"
+        )
+    
+    with col3:
+        st.metric(
+            label="🔥 Skills Matched",
+            value=f"{analysis_result['matched_skills']}/{analysis_result['total_skills']}"
+        )
+    
+    with col4:
+        st.metric(
+            label="🎯 Predicted Field",
+            value=predicted_field
+        )
+    
+    # ── Progress Bar ──
+    st.markdown("""
+    <div class="progress-bar">
+        <div class="progress-fill" style="width: {score}%">Score: {score}/100</div>
+    </div>
+    """.format(score=score), unsafe_allow_html=True)
+    
+    # ═══════════════════════════════════════════════════════════════
+    #  📋 RESUME DETAILS
+    # ═══════════════════════════════════════════════════════════════
+    st.markdown("---")
+    st.markdown("## 📋 Extracted Resume Information")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("👤 Personal Info")
+        info_data = {
+            "Name": resume_data.get("name", "N/A"),
+            "Email": resume_data.get("email", "N/A"),
+            "Phone": resume_data.get("phone", "N/A"),
+            "Location": resume_data.get("location", "N/A"),
+            "Experience": f"{resume_data.get('experience', 0)} years"
+        }
+        st.dataframe(pd.DataFrame([info_data]), hide_index=True, use_container_width=True)
+    
+    with col2:
+        st.subheader("🎓 Education")
+        edu_data = resume_data.get("education", [])
+        if edu_data:
+            df_edu = pd.DataFrame(edu_data)
+            st.dataframe(df_edu, hide_index=True, use_container_width=True)
+        else:
+            st.info("No education info found")
+    
+    # ═══════════════════════════════════════════════════════════════
+    #  🛠️ SKILLS ANALYSIS
+    # ═══════════════════════════════════════════════════════════════
+    st.markdown("---")
+    st.markdown("## 🛠️ Skills Analysis")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("✅ Matched Skills")
+        for skill in analysis_result["matched_skills_list"]:
+            st.markdown(f'<span class="skill-tag">✅ {skill}</span>', unsafe_allow_html=True)
+    
+    with col2:
+        st.subheader("❌ Missing Skills")
+        for skill in analysis_result["missing_skills_list"]:
+            st.markdown(f'<span class="skill-tag" style="background: linear-gradient(90deg, #ff6b6b, #ee5a24);">❌ {skill}</span>', unsafe_allow_html=True)
+    
+    # ── Skills Bar Chart ──
+    st.markdown("### 📊 Skills Distribution")
+    skills_df = pd.DataFrame({
+        "Skill": list(analysis_result["skills_with_scores"].keys()),
+        "Score": list(analysis_result["skills_with_scores"].values())
+    })
+    
+    fig = px.bar(
+        skills_df.sort_values("Score", ascending=True),
+        x="Score",
+        y="Skill",
+        orientation="h",
+        color="Score",
+        color_continuous_scale="Viridis",
+        title="🛠️ Skills Matching Score"
+    )
+    fig.update_layout(
+        height=400,
+        plot_bgcolor="rgba(0,0,0,0.3)",
+        paper_bgcolor="rgba(0,0,0,0.1)",
+        font_color="white"
+    )
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # ═══════════════════════════════════════════════════════════════
+    #  💼 EXPERIENCE ANALYSIS
+    # ═══════════════════════════════════════════════════════════════
+    st.markdown("---")
+    st.markdown("## 💼 Experience Analysis")
+    
+    work_exp = resume_data.get("work_experience", [])
+    if work_exp:
+        exp_df = pd.DataFrame(work_exp)
+        st.dataframe(exp_df, hide_index=True, use_container_width=True)
+        
+        # Pie Chart for Experience Distribution
+        fig_pie = px.pie(
+            values=[len(exp_df)] if len(exp_df) > 0 else [1],
+            names=["Experience Years"],
+            title="📊 Experience Overview"
+        )
+        st.plotly_chart(fig_pie, use_container_width=True)
+    else:
+        st.warning("⚠️ No work experience found in resume")
+    
+    # ═══════════════════════════════════════════════════════════════
+    #  🎯 RECOMMENDATIONS
+    # ═══════════════════════════════════════════════════════════════
+    st.markdown("---")
+    st.markdown("## 🎯 AI Recommendations")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("📚 Suggested Courses")
+        courses = [
+            "📖 Advanced Python Programming",
+            "📖 Machine Learning A-Z",
+            "📖 AWS Certified Solutions Architect",
+            "📖 SQL for Data Science",
+            "📖 System Design Interview Prep"
+        ]
+        for course in courses:
+            st.success(course)
+    
+    with col2:
+        st.subheader("🔥 Top Companies to Apply")
+        companies = [
+            "🏢 Google",
+            "🏢 Microsoft",
+            "🏢 Amazon",
+            "🏢 Meta",
+            "🏢 Netflix"
+        ]
+        for company in companies:
+            st.info(company)
+    
+    # ═══════════════════════════════════════════════════════════════
+    #  📥 EXPORT RESULTS
+    # ═══════════════════════════════════════════════════════════════
+    st.markdown("---")
+    st.markdown("## 📥 Export Results")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        csv_data = pd.DataFrame([analysis_result])
+        csv = csv_data.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Download CSV",
+            data=csv,
+            file_name="resume_analysis.csv",
+            mime="text/csv"
+        )
+    
+    with col2:
+        # Create PDF report
+        report = f"""
+        AI Resume Analysis Report
+        =========================
+        Name: {resume_data.get('name', 'N/A')}
+        Overall Score: {score}/100
+        Match Percentage: {analysis_result['match_percentage']}%
+        Predicted Field: {predicted_field}
+        Matched Skills: {', '.join(analysis_result['matched_skills_list'])}
+        Missing Skills: {', '.join(analysis_result['missing_skills_list'])}
+        """
+        st.download_button(
+            label="📥 Download Report",
+            data=report,
+            file_name="resume_report.txt",
+            mime="text/plain"
+        )
+    
+    with col3:
+        st.button("🔄 Analyze Another Resume", type="secondary")
+
+# ═══════════════════════════════════════════════════════════════════
+#  🏠 WELCOME SCREEN (No file uploaded)
+# ═══════════════════════════════════════════════════════════════════
+else:
+    st.markdown("""
+    <div style='text-align:center; padding: 3rem;'>
+        <h2 style='color: #667eea; font-size: 2.5rem;'>👋 Welcome to AI Resume Analyzer Pro!</h2>
+        <p style='color: #a0a0a0; font-size: 1.2rem; margin-top: 1rem;'>
+            Upload your resume and get instant AI-powered analysis ✨
+        </p>
+        <div style='margin-top: 2rem;'>
+            <span style='font-size: 3rem;'>📄</span>
+            <span style='font-size: 3rem; margin: 0 1rem;'>🔍</span>
+            <span style='font-size: 3rem;'>📊</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    st.markdown("### ✨ Features")
+    
+    features = [
+        ("🤖", "AI-Powered Resume Parsing", "Extracts all information using NLP"),
+        ("📊", "Smart Scoring System", "Get instant score out of 100"),
+        ("🎯", "Skill Matching", "Compare with target job requirements"),
+        ("📚", "Course Recommendations", "Get personalized learning suggestions"),
+        ("🏢", "Company Suggestions", "Find best companies to apply"),
+        ("📥", "Export Results", "Download CSV and reports")
     ]
     
-    for pattern in experience_patterns:
-        match = re.search(pattern, text.lower())
-        if match:
+    for icon, title, desc in features:
+        with st.expander(f"{icon} {title}", expanded=True):
+            st.info(f"📌 {desc}")
+    
+    # ── Demo Button ──
+    st.markdown("---")
+    if st.button("🧪 Try Demo Analysis"):
+        st.balloons()
+        st.success("🎉 Demo feature coming soon!")        if match:
             if len(match.groups()) == 2:
                 return int(match.group(2))  # Take the higher end
             else:
