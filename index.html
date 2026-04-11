@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Analyzer - Professional Edition</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-brain"></i>
+                    <span>AI Resume Analyzer</span>
+                </div>
+                <nav class="nav">
+                    <button class="nav-btn active" data-section="analyzer">
+                        <i class="fas fa-search"></i> Analyzer
+                    </button>
+                    <button class="nav-btn" data-section="insights">
+                        <i class="fas fa-chart-line"></i> Insights
+                    </button>
+                    <button class="nav-btn" data-section="templates">
+                        <i class="fas fa-file-alt"></i> Templates
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Analyzer Section -->
+            <section id="analyzer" class="section active">
+                <div class="container">
+                    <div class="card">
+                        <div class="card-header">
+                            <h1>Professional Resume Analysis</h1>
+                            <p class="subtitle">Upload your resume for instant AI-powered insights and optimization recommendations</p>
+                        </div>
+
+                        <form id="resumeForm" class="upload-form">
+                            <div class="upload-area" id="uploadArea">
+                                <div class="upload-content">
+                                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                                    <h3>Drop your resume here</h3>
+                                    <p>or click to browse (PDF, DOC, DOCX)</p>
+                                    <input type="file" id="resumeInput" accept=".pdf,.doc,.docx" hidden>
+                                    <button type="button" class="browse-btn" onclick="document.getElementById('resumeInput').click()">
+                                        Choose File
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="targetRole">Target Role</label>
+                                    <select id="targetRole">
+                                        <option value="">Auto Detect</option>
+                                        <option value="software-engineer">Software Engineer</option>
+                                        <option value="data-analyst">Data Analyst</option>
+                                        <option value="product-manager">Product Manager</option>
+                                        <option value="web-developer">Web Developer</option>
+                                        <option value="cyber-security">Cyber Security</option>
+                                        <option value="ux-designer">UX Designer</option>
+                                        <option value="marketing">Marketing Manager</option>
+                                        <option value="sales">Sales Representative</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="experience">Experience Level</label>
+                                    <select id="experience">
+                                        <option value="">Auto Detect</option>
+                                        <option value="entry">Entry Level (0-2 years)</option>
+                                        <option value="mid">Mid Level (2-5 years)</option>
+                                        <option value="senior">Senior Level (5-10 years)</option>
+                                        <option value="lead">Lead/Principal (10+ years)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="analyze-btn" id="analyzeBtn" disabled>
+                                <i class="fas fa-magic"></i>
+                                <span>Analyze Resume</span>
+                            </button>
+                        </form>
+
+                        <!-- Loading State -->
+                        <div class="loading-state" id="loadingState" style="display: none;">
+                            <div class="loading-spinner"></div>
+                            <h3>Analyzing your resume...</h3>
+                            <p>Our AI is reviewing your skills, experience, and optimization opportunities</p>
+                        </div>
+
+                        <!-- Results Section -->
+                        <div class="results-section" id="resultsSection" style="display: none;">
+                            <div class="results-header">
+                                <h2>Analysis Results</h2>
+                                <div class="overall-score">
+                                    <div class="score-circle" id="overallScore">
+                                        <span class="score-value">0</span>
+                                        <span class="score-label">Overall Score</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Metrics Grid -->
+                            <div class="metrics-grid">
+                                <div class="metric-card">
+                                    <div class="metric-icon">
+                                        <i class="fas fa-file-alt"></i>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h4>Word Count</h4>
+                                        <p class="metric-value" id="wordCount">0</p>
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-icon">
+                                        <i class="fas fa-bullseye"></i>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h4>ATS Score</h4>
+                                        <p class="metric-value" id="atsScore">0/100</p>
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-icon">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h4>Skill Density</h4>
+                                        <p class="metric-value" id="skillDensity">0%</p>
+                                    </div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-icon">
+                                        <i class="fas fa-eye"></i>
+                                    </div>
+                                    <div class="metric-content">
+                                        <h4>Readability</h4>
+                                        <p class="metric-value" id="readability">Good</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Skills Analysis -->
+                            <div class="analysis-section">
+                                <h3>Skills Analysis</h3>
+                                <div class="skills-grid">
+                                    <div class="skills-column">
+                                        <h4><i class="fas fa-check-circle text-success"></i> Skills Found</h4>
+                                        <div class="skills-list" id="skillsFound"></div>
+                                    </div>
+                                    <div class="skills-column">
+                                        <h4><i class="fas fa-exclamation-circle text-warning"></i> Missing Skills</h4>
+                                        <div class="skills-list" id="skillsMissing"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recommendations -->
+                            <div class="analysis-section">
+                                <h3>Optimization Recommendations</h3>
+                                <div class="recommendations-list" id="recommendations"></div>
+                            </div>
+
+                            <!-- Job Matches -->
+                            <div class="analysis-section">
+                                <h3>Potential Job Matches</h3>
+                                <div class="job-matches" id="jobMatches"></div>
+                            </div>
+
+                            <!-- Export Options -->
+                            <div class="export-section">
+                                <h3>Export Results</h3>
+                                <div class="export-buttons">
+                                    <button class="export-btn" onclick="exportResults('pdf')">
+                                        <i class="fas fa-file-pdf"></i> Export as PDF
+                                    </button>
+                                    <button class="export-btn" onclick="exportResults('json')">
+                                        <i class="fas fa-file-code"></i> Export as JSON
+                                    </button>
+                                    <button class="export-btn" onclick="shareResults()">
+                                        <i class="fas fa-share-alt"></i> Share Results
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Insights Section -->
+            <section id="insights" class="section">
+                <div class="container">
+                    <div class="card">
+                        <h2>Market Insights & Trends</h2>
+                        <div class="insights-grid">
+                            <div class="insight-card">
+                                <h3>Top Skills 2024</h3>
+                                <div class="skill-tags">
+                                    <span class="skill-tag">Python</span>
+                                    <span class="skill-tag">JavaScript</span>
+                                    <span class="skill-tag">Machine Learning</span>
+                                    <span class="skill-tag">Cloud Computing</span>
+                                    <span class="skill-tag">DevOps</span>
+                                </div>
+                            </div>
+                            <div class="insight-card">
+                                <h3>Salary Insights</h3>
+                                <div class="salary-info">
+                                    <p>Average salaries by role and experience</p>
+                                    <button class="view-btn">View Details</button>
+                                </div>
+                            </div>
+                            <div class="insight-card">
+                                <h3>Industry Trends</h3>
+                                <div class="trend-info">
+                                    <p>Emerging technologies and in-demand skills</p>
+                                    <button class="view-btn">Explore Trends</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Templates Section -->
+            <section id="templates" class="section">
+                <div class="container">
+                    <div class="card">
+                        <h2>Resume Templates</h2>
+                        <div class="templates-grid">
+                            <div class="template-card">
+                                <div class="template-preview">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <h3>Professional</h3>
+                                <p>Clean and traditional design</p>
+                                <button class="use-template-btn">Use Template</button>
+                            </div>
+                            <div class="template-card">
+                                <div class="template-preview">
+                                    <i class="fas fa-palette"></i>
+                                </div>
+                                <h3>Creative</h3>
+                                <p>Modern and eye-catching design</p>
+                                <button class="use-template-btn">Use Template</button>
+                            </div>
+                            <div class="template-card">
+                                <div class="template-preview">
+                                    <i class="fas fa-code"></i>
+                                </div>
+                                <h3>Technical</h3>
+                                <p>Optimized for tech roles</p>
+                                <button class="use-template-btn">Use Template</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>&copy; 2024 AI Resume Analyzer. Built with advanced AI technology.</p>
+                <div class="footer-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Contact</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
