@@ -26,6 +26,9 @@
                     <button class="nav-btn active" data-section="analyzer">
                         <i class="fas fa-search"></i> Analyzer
                     </button>
+                    <button class="nav-btn" data-section="builder">
+                        <i class="fas fa-hammer"></i> Builder
+                    </button>
                     <button class="nav-btn" data-section="insights">
                         <i class="fas fa-chart-line"></i> Insights
                     </button>
@@ -192,6 +195,205 @@
                                     <button class="export-btn" onclick="shareResults()">
                                         <i class="fas fa-share-alt"></i> Share Results
                                     </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Resume Builder Section -->
+            <section id="builder" class="section">
+                <div class="container">
+                    <div class="builder-layout">
+                        <!-- Builder Form -->
+                        <div class="builder-form">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2>Resume Builder</h2>
+                                    <p class="subtitle">Create your professional resume step by step</p>
+                                </div>
+
+                                <!-- Template Selection -->
+                                <div class="template-selector">
+                                    <h3>Choose Template</h3>
+                                    <div class="template-options">
+                                        <button class="template-option active" data-template="professional">
+                                            <i class="fas fa-briefcase"></i>
+                                            <span>Professional</span>
+                                        </button>
+                                        <button class="template-option" data-template="creative">
+                                            <i class="fas fa-palette"></i>
+                                            <span>Creative</span>
+                                        </button>
+                                        <button class="template-option" data-template="technical">
+                                            <i class="fas fa-code"></i>
+                                            <span>Technical</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Personal Information -->
+                                <div class="form-section">
+                                    <h3>Personal Information</h3>
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label for="fullName">Full Name *</label>
+                                            <input type="text" id="fullName" placeholder="John Doe" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="email">Email *</label>
+                                            <input type="email" id="email" placeholder="john.doe@email.com" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="phone">Phone</label>
+                                            <input type="tel" id="phone" placeholder="+1 (555) 123-4567">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="location">Location</label>
+                                            <input type="text" id="location" placeholder="San Francisco, CA">
+                                        </div>
+                                        <div class="form-group full-width">
+                                            <label for="summary">Professional Summary</label>
+                                            <textarea id="summary" rows="4" placeholder="A brief summary of your professional background and career objectives..."></textarea>
+                                        </div>
+                                        <div class="form-group full-width">
+                                            <label for="linkedin">LinkedIn Profile</label>
+                                            <input type="url" id="linkedin" placeholder="https://linkedin.com/in/johndoe">
+                                        </div>
+                                        <div class="form-group full-width">
+                                            <label for="portfolio">Portfolio/Website</label>
+                                            <input type="url" id="portfolio" placeholder="https://johndoe.com">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Work Experience -->
+                                <div class="form-section">
+                                    <h3>Work Experience</h3>
+                                    <div id="experienceList">
+                                        <div class="experience-item">
+                                            <div class="form-grid">
+                                                <div class="form-group">
+                                                    <label>Job Title *</label>
+                                                    <input type="text" class="job-title" placeholder="Software Engineer" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Company *</label>
+                                                    <input type="text" class="company" placeholder="Tech Corp" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Start Date *</label>
+                                                    <input type="month" class="start-date" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>End Date</label>
+                                                    <input type="month" class="end-date">
+                                                    <label class="checkbox-label">
+                                                        <input type="checkbox" class="current-job"> Current Job
+                                                    </label>
+                                                </div>
+                                                <div class="form-group full-width">
+                                                    <label>Responsibilities & Achievements</label>
+                                                    <textarea class="responsibilities" rows="3" placeholder="• Led development of web applications&#10;• Improved system performance by 40%&#10;• Managed team of 5 developers"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="add-btn" onclick="addExperience()">
+                                        <i class="fas fa-plus"></i> Add Experience
+                                    </button>
+                                </div>
+
+                                <!-- Education -->
+                                <div class="form-section">
+                                    <h3>Education</h3>
+                                    <div id="educationList">
+                                        <div class="education-item">
+                                            <div class="form-grid">
+                                                <div class="form-group">
+                                                    <label>Degree *</label>
+                                                    <input type="text" class="degree" placeholder="Bachelor of Science" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Institution *</label>
+                                                    <input type="text" class="institution" placeholder="University of California" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Field of Study</label>
+                                                    <input type="text" class="field" placeholder="Computer Science">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Graduation Year</label>
+                                                    <input type="number" class="grad-year" placeholder="2020" min="1950" max="2030">
+                                                </div>
+                                                <div class="form-group full-width">
+                                                    <label>Achievements</label>
+                                                    <textarea class="achievements" rows="2" placeholder="Dean's List, GPA: 3.8, Relevant coursework..."></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="add-btn" onclick="addEducation()">
+                                        <i class="fas fa-plus"></i> Add Education
+                                    </button>
+                                </div>
+
+                                <!-- Skills -->
+                                <div class="form-section">
+                                    <h3>Skills</h3>
+                                    <div class="skills-inputs">
+                                        <div class="skills-category">
+                                            <label>Technical Skills</label>
+                                            <input type="text" id="technicalSkills" placeholder="JavaScript, Python, React, AWS">
+                                        </div>
+                                        <div class="skills-category">
+                                            <label>Soft Skills</label>
+                                            <input type="text" id="softSkills" placeholder="Leadership, Communication, Problem Solving">
+                                        </div>
+                                        <div class="skills-category">
+                                            <label>Languages</label>
+                                            <input type="text" id="languages" placeholder="English (Native), Spanish (Fluent)">
+                                        </div>
+                                        <div class="skills-category">
+                                            <label>Certifications</label>
+                                            <input type="text" id="certifications" placeholder="AWS Certified, PMP, Google Analytics">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="builder-actions">
+                                    <button type="button" class="preview-btn" onclick="updatePreview()">
+                                        <i class="fas fa-eye"></i> Update Preview
+                                    </button>
+                                    <button type="button" class="export-btn" onclick="exportResume()">
+                                        <i class="fas fa-download"></i> Export Resume
+                                    </button>
+                                    <button type="button" class="clear-btn" onclick="clearForm()">
+                                        <i class="fas fa-trash"></i> Clear All
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Live Preview -->
+                        <div class="builder-preview">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Live Preview</h3>
+                                    <button type="button" class="fullscreen-btn" onclick="toggleFullscreen()">
+                                        <i class="fas fa-expand"></i>
+                                    </button>
+                                </div>
+                                <div class="preview-container" id="resumePreview">
+                                    <div class="resume-preview professional-template" id="previewContent">
+                                        <!-- Preview content will be generated here -->
+                                        <div class="preview-placeholder">
+                                            <i class="fas fa-file-alt"></i>
+                                            <p>Start filling out the form to see your resume preview here</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

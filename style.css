@@ -885,6 +885,607 @@ select:focus {
     outline-offset: 2px;
 }
 
+/* Resume Builder Styles */
+.builder-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+/* Template Selector */
+.template-selector {
+    margin-bottom: 2rem;
+}
+
+.template-selector h3 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.template-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.template-option {
+    padding: 1rem;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.template-option:hover {
+    border-color: var(--primary);
+    background: rgba(102, 126, 234, 0.1);
+    color: var(--text-primary);
+}
+
+.template-option.active {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: white;
+}
+
+.template-option i {
+    font-size: 1.5rem;
+}
+
+.template-option span {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Form Sections */
+.form-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border);
+}
+
+.form-section h3 {
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: all var(--transition-normal);
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: var(--bg-primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+
+/* Experience & Education Items */
+.experience-item,
+.education-item {
+    padding: 1.5rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-lg);
+    margin-bottom: 1rem;
+    border: 1px solid var(--border);
+    position: relative;
+}
+
+.experience-item .remove-item,
+.education-item .remove-item {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: var(--danger);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-normal);
+}
+
+.experience-item .remove-item:hover,
+.education-item .remove-item:hover {
+    background: #e53e3e;
+    transform: scale(1.1);
+}
+
+/* Skills Inputs */
+.skills-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.skills-category {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.skills-category label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.skills-category input {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: all var(--transition-normal);
+}
+
+.skills-category input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: var(--bg-primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Action Buttons */
+.add-btn {
+    background: var(--success);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    margin-top: 1rem;
+}
+
+.add-btn:hover {
+    background: #38a169;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.builder-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+.preview-btn,
+.export-btn,
+.clear-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.preview-btn {
+    background: var(--info);
+    color: white;
+}
+
+.preview-btn:hover {
+    background: #3182ce;
+    transform: translateY(-2px);
+}
+
+.export-btn {
+    background: var(--primary);
+    color: white;
+}
+
+.export-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.clear-btn {
+    background: var(--danger);
+    color: white;
+}
+
+.clear-btn:hover {
+    background: #e53e3e;
+    transform: translateY(-2px);
+}
+
+/* Preview Section */
+.builder-preview {
+    position: sticky;
+    top: 2rem;
+}
+
+.preview-container {
+    max-height: 80vh;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: white;
+    color: #333;
+}
+
+.fullscreen-btn {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    padding: 0.5rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.fullscreen-btn:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* Resume Preview Templates */
+.resume-preview {
+    padding: 2rem;
+    min-height: 11in;
+    background: white;
+    color: #333;
+}
+
+.preview-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    color: #999;
+    text-align: center;
+}
+
+.preview-placeholder i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: #ccc;
+}
+
+.preview-placeholder p {
+    font-size: 1.1rem;
+}
+
+/* Professional Template */
+.professional-template {
+    font-family: 'Times New Roman', serif;
+    line-height: 1.4;
+}
+
+.professional-template .resume-header {
+    text-align: center;
+    border-bottom: 2px solid #333;
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+}
+
+.professional-template .resume-name {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+}
+
+.professional-template .resume-contact {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.professional-template .resume-section {
+    margin-bottom: 1.5rem;
+}
+
+.professional-template .section-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-bottom: 1px solid #333;
+    padding-bottom: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+.professional-template .experience-item,
+.professional-template .education-item {
+    margin-bottom: 1rem;
+}
+
+.professional-template .item-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+}
+
+.professional-template .item-title {
+    font-weight: bold;
+}
+
+.professional-template .item-date {
+    font-style: italic;
+    color: #666;
+}
+
+.professional-template .item-subtitle {
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.professional-template .skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.professional-template .skill-item {
+    background: #f5f5f5;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.9rem;
+}
+
+/* Creative Template */
+.creative-template {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.creative-template .resume-header {
+    text-align: center;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.creative-template .resume-name {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.creative-template .resume-contact {
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+.creative-template .resume-content {
+    background: rgba(255, 255, 255, 0.95);
+    color: #333;
+    margin: 0 1rem 1rem;
+    padding: 2rem;
+    border-radius: 10px;
+}
+
+.creative-template .section-title {
+    color: var(--primary);
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    position: relative;
+    padding-left: 1rem;
+}
+
+.creative-template .section-title::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 20px;
+    background: var(--primary);
+}
+
+/* Technical Template */
+.technical-template {
+    font-family: 'Courier New', monospace;
+    background: #1e1e1e;
+    color: #d4d4d4;
+}
+
+.technical-template .resume-header {
+    background: #2d2d30;
+    padding: 1.5rem;
+    border-left: 4px solid var(--primary);
+    margin-bottom: 1.5rem;
+}
+
+.technical-template .resume-name {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #4ec9b0;
+    margin-bottom: 0.5rem;
+}
+
+.technical-template .resume-contact {
+    color: #9cdcfe;
+}
+
+.technical-template .section-title {
+    color: #c586c0;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #3e3e42;
+    padding-bottom: 0.5rem;
+}
+
+.technical-template .item-title {
+    color: #9cdcfe;
+    font-weight: bold;
+}
+
+.technical-template .item-date {
+    color: #608b4e;
+}
+
+.technical-template .skill-item {
+    background: #2d2d30;
+    color: #4ec9b0;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.9rem;
+    border: 1px solid #3e3e42;
+}
+
+/* Fullscreen Preview */
+.fullscreen-preview {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.fullscreen-preview .preview-content {
+    background: white;
+    border-radius: var(--radius-xl);
+    max-width: 8.5in;
+    max-height: 11in;
+    overflow-y: auto;
+    position: relative;
+}
+
+.fullscreen-preview .close-fullscreen {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: var(--danger);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    z-index: 1001;
+}
+
+/* Responsive Design for Builder */
+@media (max-width: 1024px) {
+    .builder-layout {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .builder-preview {
+        position: static;
+        order: -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .template-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .skills-inputs {
+        grid-template-columns: 1fr;
+    }
+    
+    .builder-actions {
+        flex-direction: column;
+    }
+    
+    .preview-btn,
+    .export-btn,
+    .clear-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 /* Print Styles */
 @media print {
     .header,
@@ -896,5 +1497,23 @@ select:focus {
     .card {
         box-shadow: none;
         border: 1px solid #ccc;
+    }
+    
+    .builder-form {
+        display: none;
+    }
+    
+    .builder-preview {
+        position: static;
+        width: 100%;
+    }
+    
+    .preview-container {
+        max-height: none;
+        overflow: visible;
+    }
+    
+    .fullscreen-btn {
+        display: none;
     }
 }
