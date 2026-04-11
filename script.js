@@ -617,3 +617,582 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Resume Builder Variables
+let currentTemplate = 'professional';
+let resumeData = {
+    personal: {},
+    experience: [],
+    education: [],
+    skills: {
+        technical: [],
+        soft: [],
+        languages: [],
+        certifications: []
+    }
+};
+
+// Initialize Resume Builder
+document.addEventListener('DOMContentLoaded', function() {
+    initializeEventListeners();
+    setupDragAndDrop();
+    initializeResumeBuilder();
+});
+
+// Initialize Resume Builder
+function initializeResumeBuilder() {
+    // Template selection
+    const templateOptions = document.querySelectorAll('.template-option');
+    templateOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            selectTemplate(this.dataset.template);
+        });
+    });
+
+    // Auto-update preview on input changes
+    const formInputs = document.querySelectorAll('#builder input, #builder textarea');
+    formInputs.forEach(input => {
+        input.addEventListener('input', debounce(updatePreview, 500));
+    });
+
+    // Current job checkbox handling
+    const currentJobCheckboxes = document.querySelectorAll('.current-job');
+    currentJobCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const endDateInput = this.closest('.experience-item').querySelector('.end-date');
+            if (this.checked) {
+                endDateInput.value = '';
+                endDateInput.disabled = true;
+            } else {
+                endDateInput.disabled = false;
+            }
+        });
+    });
+}
+
+// Template Selection
+function selectTemplate(template) {
+    currentTemplate = template;
+    
+    // Update active state
+    document.querySelectorAll('.template-option').forEach(option => {
+        option.classList.remove('active');
+    });
+    document.querySelector(`[data-template="${template}"]`).classList.add('active');
+    
+    // Update preview
+    updatePreview();
+}
+
+// Add Experience
+function addExperience() {
+    const experienceList = document.getElementById('experienceList');
+    const experienceItem = document.createElement('div');
+    experienceItem.className = 'experience-item';
+    experienceItem.innerHTML = `
+        <button type="button" class="remove-item" onclick="removeExperience(this)">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Job Title *</label>
+                <input type="text" class="job-title" placeholder="Software Engineer" required>
+            </div>
+            <div class="form-group">
+                <label>Company *</label>
+                <input type="text" class="company" placeholder="Tech Corp" required>
+            </div>
+            <div class="form-group">
+                <label>Start Date *</label>
+                <input type="month" class="start-date" required>
+            </div>
+            <div class="form-group">
+                <label>End Date</label>
+                <input type="month" class="end-date">
+                <label class="checkbox-label">
+                    <input type="checkbox" class="current-job"> Current Job
+                </label>
+            </div>
+            <div class="form-group full-width">
+                <label>Responsibilities & Achievements</label>
+                <textarea class="responsibilities" rows="3" placeholder="• Led development of web applications&#10;• Improved system performance by 40%&#10;• Managed team of 5 developers"></textarea>
+            </div>
+        </div>
+    `;
+    
+    experienceList.appendChild(experienceItem);
+    
+    // Add event listeners to new elements
+    const newCheckbox = experienceItem.querySelector('.current-job');
+    newCheckbox.addEventListener('change', function() {
+        const endDateInput = this.closest('.experience-item').querySelector('.end-date');
+        if (this.checked) {
+            endDateInput.value = '';
+            endDateInput.disabled = true;
+        } else {
+            endDateInput.disabled = false;
+        }
+    });
+    
+    // Add auto-update listener
+    const newInputs = experienceItem.querySelectorAll('input, textarea');
+    newInputs.forEach(input => {
+        input.addEventListener('input', debounce(updatePreview, 500));
+    });
+}
+
+// Remove Experience
+function removeExperience(button) {
+    button.closest('.experience-item').remove();
+    updatePreview();
+}
+
+// Add Education
+function addEducation() {
+    const educationList = document.getElementById('educationList');
+    const educationItem = document.createElement('div');
+    educationItem.className = 'education-item';
+    educationItem.innerHTML = `
+        <button type="button" class="remove-item" onclick="removeEducation(this)">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Degree *</label>
+                <input type="text" class="degree" placeholder="Bachelor of Science" required>
+            </div>
+            <div class="form-group">
+                <label>Institution *</label>
+                <input type="text" class="institution" placeholder="University of California" required>
+            </div>
+            <div class="form-group">
+                <label>Field of Study</label>
+                <input type="text" class="field" placeholder="Computer Science">
+            </div>
+            <div class="form-group">
+                <label>Graduation Year</label>
+                <input type="number" class="grad-year" placeholder="2020" min="1950" max="2030">
+            </div>
+            <div class="form-group full-width">
+                <label>Achievements</label>
+                <textarea class="achievements" rows="2" placeholder="Dean's List, GPA: 3.8, Relevant coursework..."></textarea>
+            </div>
+        </div>
+    `;
+    
+    educationList.appendChild(educationItem);
+    
+    // Add auto-update listener
+    const newInputs = educationItem.querySelectorAll('input, textarea');
+    newInputs.forEach(input => {
+        input.addEventListener('input', debounce(updatePreview, 500));
+    });
+}
+
+// Remove Education
+function removeEducation(button) {
+    button.closest('.education-item').remove();
+    updatePreview();
+}
+
+// Collect Form Data
+function collectFormData() {
+    // Personal Information
+    resumeData.personal = {
+        fullName: document.getElementById('fullName').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        location: document.getElementById('location').value,
+        summary: document.getElementById('summary').value,
+        linkedin: document.getElementById('linkedin').value,
+        portfolio: document.getElementById('portfolio').value
+    };
+
+    // Experience
+    resumeData.experience = [];
+    const experienceItems = document.querySelectorAll('.experience-item');
+    experienceItems.forEach(item => {
+        const experience = {
+            jobTitle: item.querySelector('.job-title').value,
+            company: item.querySelector('.company').value,
+            startDate: item.querySelector('.start-date').value,
+            endDate: item.querySelector('.end-date').value,
+            currentJob: item.querySelector('.current-job').checked,
+            responsibilities: item.querySelector('.responsibilities').value
+        };
+        if (experience.jobTitle || experience.company) {
+            resumeData.experience.push(experience);
+        }
+    });
+
+    // Education
+    resumeData.education = [];
+    const educationItems = document.querySelectorAll('.education-item');
+    educationItems.forEach(item => {
+        const education = {
+            degree: item.querySelector('.degree').value,
+            institution: item.querySelector('.institution').value,
+            field: item.querySelector('.field').value,
+            gradYear: item.querySelector('.grad-year').value,
+            achievements: item.querySelector('.achievements').value
+        };
+        if (education.degree || education.institution) {
+            resumeData.education.push(education);
+        }
+    });
+
+    // Skills
+    resumeData.skills = {
+        technical: document.getElementById('technicalSkills').value.split(',').map(s => s.trim()).filter(s => s),
+        soft: document.getElementById('softSkills').value.split(',').map(s => s.trim()).filter(s => s),
+        languages: document.getElementById('languages').value.split(',').map(s => s.trim()).filter(s => s),
+        certifications: document.getElementById('certifications').value.split(',').map(s => s.trim()).filter(s => s)
+    };
+
+    return resumeData;
+}
+
+// Update Preview
+function updatePreview() {
+    const data = collectFormData();
+    const previewContainer = document.getElementById('previewContent');
+    
+    // Remove template classes
+    previewContainer.className = 'resume-preview';
+    previewContainer.classList.add(`${currentTemplate}-template`);
+    
+    // Generate preview based on template
+    switch(currentTemplate) {
+        case 'professional':
+            previewContainer.innerHTML = generateProfessionalPreview(data);
+            break;
+        case 'creative':
+            previewContainer.innerHTML = generateCreativePreview(data);
+            break;
+        case 'technical':
+            previewContainer.innerHTML = generateTechnicalPreview(data);
+            break;
+        default:
+            previewContainer.innerHTML = generateProfessionalPreview(data);
+    }
+}
+
+// Generate Professional Template Preview
+function generateProfessionalPreview(data) {
+    if (!data.personal.fullName) {
+        return `
+            <div class="preview-placeholder">
+                <i class="fas fa-file-alt"></i>
+                <p>Start filling out the form to see your resume preview here</p>
+            </div>
+        `;
+    }
+
+    const contactInfo = [];
+    if (data.personal.email) contactInfo.push(data.personal.email);
+    if (data.personal.phone) contactInfo.push(data.personal.phone);
+    if (data.personal.location) contactInfo.push(data.personal.location);
+
+    return `
+        <div class="resume-header">
+            <div class="resume-name">${data.personal.fullName}</div>
+            <div class="resume-contact">${contactInfo.join(' • ')}</div>
+        </div>
+        
+        ${data.personal.summary ? `
+        <div class="resume-section">
+            <div class="section-title">Professional Summary</div>
+            <p>${data.personal.summary}</p>
+        </div>
+        ` : ''}
+        
+        ${data.experience.length > 0 ? `
+        <div class="resume-section">
+            <div class="section-title">Professional Experience</div>
+            ${data.experience.map(exp => `
+                <div class="experience-item">
+                    <div class="item-header">
+                        <div class="item-title">${exp.jobTitle}</div>
+                        <div class="item-date">${formatDate(exp.startDate)} - ${exp.currentJob ? 'Present' : formatDate(exp.endDate)}</div>
+                    </div>
+                    <div class="item-subtitle">${exp.company}</div>
+                    <div class="item-description">${formatResponsibilities(exp.responsibilities)}</div>
+                </div>
+            `).join('')}
+        </div>
+        ` : ''}
+        
+        ${data.education.length > 0 ? `
+        <div class="resume-section">
+            <div class="section-title">Education</div>
+            ${data.education.map(edu => `
+                <div class="education-item">
+                    <div class="item-header">
+                        <div class="item-title">${edu.degree}</div>
+                        <div class="item-date">${edu.gradYear}</div>
+                    </div>
+                    <div class="item-subtitle">${edu.institution}${edu.field ? ` - ${edu.field}` : ''}</div>
+                    ${edu.achievements ? `<div class="item-description">${edu.achievements}</div>` : ''}
+                </div>
+            `).join('')}
+        </div>
+        ` : ''}
+        
+        ${hasSkills(data) ? `
+        <div class="resume-section">
+            <div class="section-title">Skills</div>
+            <div class="skills-list">
+                ${data.skills.technical.map(skill => `<span class="skill-item">${skill}</span>`).join('')}
+                ${data.skills.soft.map(skill => `<span class="skill-item">${skill}</span>`).join('')}
+                ${data.skills.languages.map(skill => `<span class="skill-item">${skill}</span>`).join('')}
+                ${data.skills.certifications.map(skill => `<span class="skill-item">${skill}</span>`).join('')}
+            </div>
+        </div>
+        ` : ''}
+    `;
+}
+
+// Generate Creative Template Preview
+function generateCreativePreview(data) {
+    const professionalContent = generateProfessionalPreview(data);
+    return `
+        <div class="resume-header">
+            <div class="resume-name">${data.personal.fullName || 'Your Name'}</div>
+            <div class="resume-contact">${[data.personal.email, data.personal.phone, data.personal.location].filter(Boolean).join(' • ')}</div>
+        </div>
+        <div class="resume-content">
+            ${professionalContent.replace(/<div class="resume-header">.*?<\/div>/s, '').replace(/class="resume-section"/g, 'class="resume-section"')}
+        </div>
+    `;
+}
+
+// Generate Technical Template Preview
+function generateTechnicalPreview(data) {
+    return generateProfessionalPreview(data); // Use professional as base with technical styling
+}
+
+// Utility Functions
+function formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+}
+
+function formatResponsibilities(responsibilities) {
+    return responsibilities.split('\n').map(line => line.trim()).filter(line => line).join('<br>');
+}
+
+function hasSkills(data) {
+    return data.skills.technical.length > 0 || 
+           data.skills.soft.length > 0 || 
+           data.skills.languages.length > 0 || 
+           data.skills.certifications.length > 0;
+}
+
+// Export Resume
+function exportResume() {
+    const data = collectFormData();
+    
+    // Create HTML content
+    let htmlContent;
+    switch(currentTemplate) {
+        case 'professional':
+            htmlContent = generateProfessionalPreview(data);
+            break;
+        case 'creative':
+            htmlContent = generateCreativePreview(data);
+            break;
+        case 'technical':
+            htmlContent = generateTechnicalPreview(data);
+            break;
+        default:
+            htmlContent = generateProfessionalPreview(data);
+    }
+    
+    // Create full HTML document
+    const fullHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>${data.personal.fullName} - Resume</title>
+            <style>
+                ${getTemplateCSS(currentTemplate)}
+            </style>
+        </head>
+        <body>
+            ${htmlContent}
+        </body>
+        </html>
+    `;
+    
+    // Create download link
+    const blob = new Blob([fullHtml], { type: 'text/html' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${data.personal.fullName || 'resume'}_${currentTemplate}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    showNotification('Resume exported successfully!', 'success');
+}
+
+// Get Template CSS
+function getTemplateCSS(template) {
+    const baseCSS = `
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; }
+        .resume-header { text-align: center; margin-bottom: 30px; }
+        .resume-name { font-size: 28px; font-weight: bold; margin-bottom: 10px; }
+        .resume-contact { color: #666; font-size: 14px; }
+        .resume-section { margin-bottom: 25px; }
+        .section-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #333; padding-bottom: 5px; }
+        .experience-item, .education-item { margin-bottom: 20px; }
+        .item-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .item-title { font-weight: bold; }
+        .item-date { color: #666; font-style: italic; }
+        .item-subtitle { color: #666; margin-bottom: 5px; }
+        .skills-list { display: flex; flex-wrap: wrap; gap: 10px; }
+        .skill-item { background: #f5f5f5; padding: 5px 10px; border-radius: 3px; font-size: 12px; }
+    `;
+    
+    if (template === 'creative') {
+        return baseCSS + `
+            body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+            .resume-content { background: rgba(255,255,255,0.95); color: #333; margin: 20px; padding: 30px; border-radius: 10px; }
+            .section-title { color: #667eea; border-bottom-color: #667eea; }
+        `;
+    }
+    
+    if (template === 'technical') {
+        return baseCSS + `
+            body { background: #1e1e1e; color: #d4d4d4; font-family: 'Courier New', monospace; }
+            .resume-header { background: #2d2d30; padding: 20px; border-left: 4px solid #667eea; }
+            .resume-name { color: #4ec9b0; }
+            .resume-contact { color: #9cdcfe; }
+            .section-title { color: #c586c0; border-bottom-color: #3e3e42; }
+            .item-title { color: #9cdcfe; }
+            .item-date { color: #608b4e; }
+            .skill-item { background: #2d2d30; color: #4ec9b0; border: 1px solid #3e3e42; }
+        `;
+    }
+    
+    return baseCSS;
+}
+
+// Clear Form
+function clearForm() {
+    if (confirm('Are you sure you want to clear all form data? This action cannot be undone.')) {
+        document.getElementById('builder').querySelectorAll('input, textarea').forEach(input => {
+            input.value = '';
+            input.checked = false;
+            input.disabled = false;
+        });
+        
+        // Reset to single experience and education items
+        const experienceList = document.getElementById('experienceList');
+        experienceList.innerHTML = `
+            <div class="experience-item">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Job Title *</label>
+                        <input type="text" class="job-title" placeholder="Software Engineer" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Company *</label>
+                        <input type="text" class="company" placeholder="Tech Corp" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Start Date *</label>
+                        <input type="month" class="start-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>End Date</label>
+                        <input type="month" class="end-date">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="current-job"> Current Job
+                        </label>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Responsibilities & Achievements</label>
+                        <textarea class="responsibilities" rows="3" placeholder="• Led development of web applications&#10;• Improved system performance by 40%&#10;• Managed team of 5 developers"></textarea>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const educationList = document.getElementById('educationList');
+        educationList.innerHTML = `
+            <div class="education-item">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Degree *</label>
+                        <input type="text" class="degree" placeholder="Bachelor of Science" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Institution *</label>
+                        <input type="text" class="institution" placeholder="University of California" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Field of Study</label>
+                        <input type="text" class="field" placeholder="Computer Science">
+                    </div>
+                    <div class="form-group">
+                        <label>Graduation Year</label>
+                        <input type="number" class="grad-year" placeholder="2020" min="1950" max="2030">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Achievements</label>
+                        <textarea class="achievements" rows="2" placeholder="Dean's List, GPA: 3.8, Relevant coursework..."></textarea>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        updatePreview();
+        showNotification('Form cleared successfully', 'info');
+    }
+}
+
+// Toggle Fullscreen Preview
+function toggleFullscreen() {
+    const previewContainer = document.getElementById('resumePreview');
+    
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    } else {
+        const fullscreenDiv = document.createElement('div');
+        fullscreenDiv.className = 'fullscreen-preview';
+        fullscreenDiv.innerHTML = `
+            <div class="preview-content">
+                <button class="close-fullscreen" onclick="toggleFullscreen()">
+                    <i class="fas fa-times"></i>
+                </button>
+                ${previewContainer.innerHTML}
+            </div>
+        `;
+        
+        document.body.appendChild(fullscreenDiv);
+        fullscreenDiv.requestFullscreen();
+        
+        fullscreenDiv.addEventListener('fullscreenchange', function() {
+            if (!document.fullscreenElement) {
+                document.body.removeChild(fullscreenDiv);
+            }
+        });
+    }
+}
+
+// Debounce function for auto-updates
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
