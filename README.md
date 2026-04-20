@@ -185,7 +185,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Contact
 
 - **GitHub**: [@prakashalagundagi](https://github.com/prakashalagundagi)
-- **Email**: prakash@example.com
+- **Email**: prakashalagundagi20@gmail.com
 
 ---
 
