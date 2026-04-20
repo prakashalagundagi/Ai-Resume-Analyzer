@@ -66,29 +66,18 @@ class ResumeAnalyzerAPI {
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
         notification.textContent = message;
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            color: white;
-            font-weight: 500;
-            z-index: 1000;
-            animation: slideIn 0.3s ease;
-            max-width: 300px;
-        `;
-
-        const colors = {
-            success: '#48bb78',
-            error: '#fc8181',
-            warning: '#f6ad55',
-            info: '#63b3ed'
-        };
-        notification.style.backgroundColor = colors[type] || colors.info;
 
         document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), 3000);
+        
+        // Remove notification with slideOut animation
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 300);
+        }, 3000);
     }
 
     // Parse Resume using API (Demo Mode)
