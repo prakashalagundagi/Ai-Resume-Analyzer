@@ -271,6 +271,103 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Builder Section -->
+            <section id="builder" class="section">
+                <div class="container">
+                    <div class="card">
+                        <div class="template-indicator" style="background: #f0f9ff; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center; font-weight: 600; color: #0369a1;">
+                            Select a template from the Templates page to get started
+                        </div>
+                        <h2>Resume Builder</h2>
+                        <p>Build your professional resume with our AI-powered builder</p>
+                        
+                        <div class="builder-form">
+                            <div class="form-section">
+                                <h3>Personal Information</h3>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="fullName">Full Name</label>
+                                        <input type="text" id="fullName" placeholder="John Doe">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="email">Email</label>
+                                        <input type="email" id="email" placeholder="john@example.com">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="phone">Phone</label>
+                                        <input type="tel" id="phone" placeholder="+1-555-0123">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="location">Location</label>
+                                        <input type="text" id="location" placeholder="City, State">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="summary">Professional Summary</label>
+                                    <textarea id="summary" rows="4" placeholder="Brief summary of your professional background..."></textarea>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h3>Skills</h3>
+                                <div class="form-group">
+                                    <label for="technicalSkills">Technical Skills</label>
+                                    <input type="text" id="technicalSkills" placeholder="JavaScript, Python, React, Node.js">
+                                </div>
+                                <div class="form-group">
+                                    <label for="softSkills">Soft Skills</label>
+                                    <input type="text" id="softSkills" placeholder="Communication, Leadership, Problem-solving">
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h3>Experience</h3>
+                                <div class="experience-item">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="jobTitle">Job Title</label>
+                                            <input type="text" id="jobTitle" placeholder="Software Engineer">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="company">Company</label>
+                                            <input type="text" id="company" placeholder="Tech Corp">
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="startDate">Start Date</label>
+                                            <input type="month" id="startDate">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="endDate">End Date</label>
+                                            <input type="month" id="endDate">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="jobDescription">Job Description</label>
+                                        <textarea id="jobDescription" rows="3" placeholder="Describe your responsibilities and achievements..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="builder-actions">
+                                <button class="preview-btn" onclick="updatePreview()">
+                                    <i class="fas fa-eye"></i> Preview Resume
+                                </button>
+                                <button class="export-btn" onclick="exportResume()">
+                                    <i class="fas fa-download"></i> Export Resume
+                                </button>
+                                <button class="clear-btn" onclick="clearForm()">
+                                    <i class="fas fa-trash"></i> Clear Form
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
 
         <!-- Footer -->
@@ -558,13 +655,17 @@
 
         // Update Builder with selected template
         function updateBuilderTemplate(templateName) {
-            // You can add visual feedback in the builder section
             const builderSection = document.getElementById('builder');
             if (builderSection) {
-                // Add template indicator or update builder UI
                 const templateIndicator = builderSection.querySelector('.template-indicator');
                 if (templateIndicator) {
-                    templateIndicator.textContent = `Using ${templateName.charAt(0).toUpperCase() + templateName.slice(1)} template`;
+                    templateIndicator.innerHTML = `
+                        <i class="fas fa-check-circle" style="color: #10b981; margin-right: 8px;"></i>
+                        Using <strong>${templateName.charAt(0).toUpperCase() + templateName.slice(1)}</strong> template
+                    `;
+                    templateIndicator.style.background = '#ecfdf5';
+                    templateIndicator.style.color = '#065f46';
+                    templateIndicator.style.border = '1px solid #10b981';
                 }
             }
         }
@@ -586,9 +687,58 @@
             resumeAPI.showNotification('Preview updated - API will generate resume', 'info');
         }
 
-        // Export resume (simplified)
+        // Export resume
         async function exportResume() {
-            resumeAPI.showNotification('Resume will be generated by API', 'info');
+            const selectedTemplate = localStorage.getItem('selected_template') || 'professional';
+            
+            // Gather form data
+            const resumeData = {
+                personal: {
+                    fullName: document.getElementById('fullName')?.value || '',
+                    email: document.getElementById('email')?.value || '',
+                    phone: document.getElementById('phone')?.value || '',
+                    location: document.getElementById('location')?.value || '',
+                    summary: document.getElementById('summary')?.value || ''
+                },
+                skills: {
+                    technical: document.getElementById('technicalSkills')?.value?.split(',').map(s => s.trim()) || [],
+                    soft: document.getElementById('softSkills')?.value?.split(',').map(s => s.trim()) || []
+                },
+                experience: {
+                    jobTitle: document.getElementById('jobTitle')?.value || '',
+                    company: document.getElementById('company')?.value || '',
+                    startDate: document.getElementById('startDate')?.value || '',
+                    endDate: document.getElementById('endDate')?.value || '',
+                    description: document.getElementById('jobDescription')?.value || ''
+                }
+            };
+
+            // Validate required fields
+            if (!resumeData.personal.fullName || !resumeData.personal.email) {
+                resumeAPI.showNotification('Please fill in at least your name and email', 'error');
+                return;
+            }
+
+            resumeAPI.showNotification('Generating your resume...', 'info');
+            
+            try {
+                // Generate resume using API
+                const resumeBlob = await resumeAPI.generateResume(resumeData, selectedTemplate);
+                
+                // Create download link
+                const url = URL.createObjectURL(resumeBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `resume-${selectedTemplate}-${Date.now()}.html`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                resumeAPI.showNotification('Resume downloaded successfully!', 'success');
+            } catch (error) {
+                resumeAPI.showNotification('Error generating resume', 'error');
+            }
         }
 
         // Clear form
