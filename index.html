@@ -22,18 +22,18 @@
                     <i class="fas fa-brain"></i>
                     <span>AI Resume Analyzer</span>
                 </div>
-                <nav class="nav">
-                    <button class="nav-btn active" data-section="analyzer">
-                        <i class="fas fa-search"></i> Analyzer
+                <nav class="nav" role="navigation" aria-label="Main navigation">
+                    <button class="nav-btn active" data-section="analyzer" aria-label="Go to Resume Analyzer" aria-current="page">
+                        <i class="fas fa-search" aria-hidden="true"></i> Analyzer
                     </button>
-                    <button class="nav-btn" data-section="builder">
-                        <i class="fas fa-hammer"></i> Builder
+                    <button class="nav-btn" data-section="builder" aria-label="Go to Resume Builder">
+                        <i class="fas fa-hammer" aria-hidden="true"></i> Builder
                     </button>
-                    <button class="nav-btn" data-section="insights">
-                        <i class="fas fa-chart-line"></i> Insights
+                    <button class="nav-btn" data-section="insights" aria-label="Go to Market Insights">
+                        <i class="fas fa-chart-line" aria-hidden="true"></i> Insights
                     </button>
-                    <button class="nav-btn" data-section="templates">
-                        <i class="fas fa-file-alt"></i> Templates
+                    <button class="nav-btn" data-section="templates" aria-label="Go to Resume Templates">
+                        <i class="fas fa-file-alt" aria-hidden="true"></i> Templates
                     </button>
                 </nav>
             </div>
@@ -287,12 +287,14 @@
                                 <h3>Personal Information</h3>
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label for="fullName">Full Name</label>
-                                        <input type="text" id="fullName" placeholder="John Doe">
+                                        <label for="fullName">Full Name <span class="required" aria-label="required">*</span></label>
+                                        <input type="text" id="fullName" placeholder="John Doe" required aria-required="true" aria-describedby="fullName-help">
+                                        <small id="fullName-help" class="form-help">Enter your full legal name as it appears on official documents</small>
                                     </div>
                                     <div class="form-group">
-                                        <label for="email">Email</label>
-                                        <input type="email" id="email" placeholder="john@example.com">
+                                        <label for="email">Email <span class="required" aria-label="required">*</span></label>
+                                        <input type="email" id="email" placeholder="john@example.com" required aria-required="true" aria-describedby="email-help">
+                                        <small id="email-help" class="form-help">Use a professional email address</small>
                                     </div>
                                 </div>
                                 <div class="form-row">
