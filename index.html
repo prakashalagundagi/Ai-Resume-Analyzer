@@ -393,22 +393,69 @@
     <!-- API Service -->
     <script src="api-service.js"></script>
     
-    <!-- Simple Application Logic -->
+    <!-- Performance Optimizations -->
     <script>
-        // Debounce function for live preview
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
+        // Performance utilities
+        const performanceUtils = {
+            // Debounce function for live preview
+            debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
                     clearTimeout(timeout);
-                    func(...args);
+                    timeout = setTimeout(later, wait);
                 };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
+            },
+            
+            // Throttle function for scroll events
+            throttle(func, limit) {
+                let inThrottle;
+                return function() {
+                    const args = arguments;
+                    const context = this;
+                    if (!inThrottle) {
+                        func.apply(context, args);
+                        inThrottle = true;
+                        setTimeout(() => inThrottle = false, limit);
+                    }
+                };
+            },
+            
+            // Lazy load images
+            lazyLoadImages() {
+                const images = document.querySelectorAll('img[data-src]');
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            img.src = img.dataset.src;
+                            img.classList.remove('lazy');
+                            imageObserver.unobserve(img);
+                        }
+                    });
+                });
+                
+                images.forEach(img => imageObserver.observe(img));
+            },
+            
+            // Cache DOM elements
+            cacheElements() {
+                return {
+                    navBtns: document.querySelectorAll('.nav-btn'),
+                    sections: document.querySelectorAll('.section'),
+                    uploadArea: document.getElementById('uploadArea'),
+                    resumeInput: document.getElementById('resumeInput'),
+                    resumeForm: document.getElementById('resumeForm'),
+                    previewContainer: document.getElementById('previewContainer'),
+                    builderInputs: document.querySelectorAll('#builder input, #builder textarea')
+                };
+            }
+        };
 
-        // Simple event handlers - no complex JavaScript
+        // Simple Application Logic
         document.addEventListener('DOMContentLoaded', function() {
             initializeApp();
         });
