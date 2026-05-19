@@ -1,139 +1,526 @@
-// API Service - External API Integration
-// Remove all client-side processing and use external APIs
+// =============================================
+// UPDATED RESUME ANALYZER API SERVICE
+// Production Ready Version 🚀
+// =============================================
 
 class ResumeAnalyzerAPI {
-    constructor() {
+    constructor(config = {}) {
         this.apiKey = localStorage.getItem('resume_api_key') || '';
-        this.apiBase = 'https://api.resume-analyzer.com/v1'; // Example API endpoint
+        
+        // Configurable API Base URL
+        this.apiBase = config.apiBase || 'https://api.resume-analyzer.com/v1';
+        
+        // Request timeout
+        this.timeout = config.timeout || 30000;
+
+        // Demo mode toggle
+        this.demoMode = config.demoMode ?? true;
+
+        // Default headers
+        this.defaultHeaders = {
+            'Content-Type': 'application/json'
+        };
+
         this.init();
     }
 
+    // =============================================
+    // INITIALIZE
+    // =============================================
     init() {
-        // Demo mode - no API key required
-        console.log('AI Resume Analyzer - Demo Mode');
-        // Uncomment below to enable API key requirement
-        // if (!this.apiKey) {
-        //     this.showAPIKeyModal();
-        // }
-    }
+        console.log(
+            `%cAI Resume Analyzer Initialized`,
+            'color: #667eea; font-weight: bold; font-size: 14px;'
+        );
 
-    // Show API Key Configuration Modal
-    showAPIKeyModal() {
-        const modal = document.createElement('div');
-        modal.className = 'api-key-modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <h3>🔑 API Key Required</h3>
-                <p>Enter your API key to use resume analysis features:</p>
-                <input type="password" id="apiKeyInput" placeholder="Enter your API key">
-                <div class="modal-buttons">
-                    <button onclick="resumeAPI.saveApiKey()">Save Key</button>
-                    <button onclick="resumeAPI.showGetKeyInfo()">Get API Key</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-    }
-
-    // Save API Key
-    saveApiKey() {
-        const apiKey = document.getElementById('apiKeyInput').value;
-        if (apiKey) {
-            localStorage.setItem('resume_api_key', apiKey);
-            this.apiKey = apiKey;
-            this.closeModal();
-            this.showNotification('API key saved successfully!', 'success');
-        } else {
-            this.showNotification('Please enter a valid API key', 'error');
+        if (this.demoMode) {
+            console.log('Running in Demo Mode');
+        } else if (!this.apiKey) {
+            this.showAPIKeyModal();
         }
     }
 
-    // Show API Key Information
-    showGetKeyInfo() {
-        alert('Get your API key from:\n\n1. Visit https://resume-analyzer.com/api\n2. Sign up for free account\n3. Copy your API key\n4. Paste it here');
+    // =============================================
+    // GENERIC API REQUEST HANDLER
+    // =============================================
+    async request(endpoint, options = {}) {
+        const controller = new AbortController();
+
+        const timeoutId = setTimeout(() => {
+            controller.abort();
+        }, this.timeout);
+
+        try {
+            const response = await fetch(`${this.apiBase}${endpoint}`, {
+                method: options.method || 'GET',
+                headers: {
+                    ...this.defaultHeaders,
+                    ...(this.apiKey && {
+                        Authorization: `Bearer ${this.apiKey}`
+                    }),
+                    ...(options.headers || {})
+                },
+                body: options.body
+                    ? JSON.stringify(options.body)
+                    : undefined,
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            const contentType = response.headers.get('content-type');
+
+            let data;
+
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                data = await response.text();
+            }
+
+            if (!response.ok) {
+                throw new Error(
+                    data?.message || `HTTP Error ${response.status}`
+                );
+            }
+
+            return data;
+        } catch (error) {
+            clearTimeout(timeoutId);
+
+            if (error.name === 'AbortError') {
+                throw new Error('Request timed out');
+            }
+
+            throw error;
+        }
     }
 
-    // Close Modal
+    // =============================================
+    // PARSE RESUME
+    // =============================================
+    async parseResume(file) {
+        try {
+            this.showNotification('Parsing resume...', 'info');
+
+            // Demo Mode
+            if (this.demoMode) {
+                return await this.mockParseResume();
+            }
+
+            const formData = new FormData();
+            formData.append('resume', file);
+
+            const response = await fetch(`${this.apiBase}/parse-resume`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${this.apiKey}`
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error('Resume parsing failed');
+            }
+
+            const data = await response.json();
+
+            this.showNotification(
+                'Resume parsed successfully!',
+                'success'
+            );
+
+            return data;
+
+        } catch (error) {
+            console.error(error);
+
+            this.showNotification(
+                `Parse Error: ${error.message}`,
+                'error'
+            );
+
+            return null;
+        }
+    }
+
+    // =============================================
+    // ANALYZE RESUME
+    // =============================================
+    async analyzeResume(resumeText, targetRole, experience) {
+        try {
+            this.showNotification(
+                'Analyzing resume with AI...',
+                'info'
+            );
+
+            // Demo Mode
+            if (this.demoMode) {
+                return await this.mockAnalyzeResume();
+            }
+
+            const data = await this.request('/analyze-resume', {
+                method: 'POST',
+                body: {
+                    resume_text: resumeText,
+                    target_role: targetRole,
+                    experience_level: experience
+                }
+            });
+
+            this.showNotification(
+                'Resume analyzed successfully!',
+                'success'
+            );
+
+            return data;
+
+        } catch (error) {
+            console.error(error);
+
+            this.showNotification(
+                `Analysis Error: ${error.message}`,
+                'error'
+            );
+
+            return null;
+        }
+    }
+
+    // =============================================
+    // GENERATE RESUME
+    // =============================================
+    async generateResume(resumeData, template = 'modern') {
+        try {
+            this.showNotification(
+                'Generating resume...',
+                'info'
+            );
+
+            // Demo Mode
+            if (this.demoMode) {
+                return await this.mockGenerateResume(
+                    resumeData,
+                    template
+                );
+            }
+
+            const response = await fetch(
+                `${this.apiBase}/generate-resume`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${this.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        resume_data: resumeData,
+                        template
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Resume generation failed');
+            }
+
+            const blob = await response.blob();
+
+            this.showNotification(
+                'Resume generated successfully!',
+                'success'
+            );
+
+            return blob;
+
+        } catch (error) {
+            console.error(error);
+
+            this.showNotification(
+                `Generation Error: ${error.message}`,
+                'error'
+            );
+
+            return null;
+        }
+    }
+
+    // =============================================
+    // JOB RECOMMENDATIONS
+    // =============================================
+    async getJobRecommendations(skills, targetRole) {
+        try {
+            this.showNotification(
+                'Fetching job recommendations...',
+                'info'
+            );
+
+            if (this.demoMode) {
+                return [
+                    {
+                        title: 'Frontend Developer',
+                        company: 'Google',
+                        location: 'Remote',
+                        salary: '$120k',
+                        match: 92
+                    },
+                    {
+                        title: 'React Developer',
+                        company: 'Microsoft',
+                        location: 'Bangalore',
+                        salary: '$110k',
+                        match: 88
+                    }
+                ];
+            }
+
+            const data = await this.request(
+                '/job-recommendations',
+                {
+                    method: 'POST',
+                    body: {
+                        skills,
+                        target_role: targetRole
+                    }
+                }
+            );
+
+            return data.jobs || [];
+
+        } catch (error) {
+            console.error(error);
+
+            this.showNotification(
+                `Job Recommendation Error: ${error.message}`,
+                'error'
+            );
+
+            return [];
+        }
+    }
+
+    // =============================================
+    // MARKET INSIGHTS
+    // =============================================
+    async getMarketInsights() {
+        try {
+            this.showNotification(
+                'Fetching market insights...',
+                'info'
+            );
+
+            if (this.demoMode) {
+                return {
+                    trending_skills: [
+                        'AI',
+                        'React',
+                        'Cybersecurity',
+                        'Cloud Computing'
+                    ],
+                    average_salary: '$95,000',
+                    top_roles: [
+                        'Full Stack Developer',
+                        'AI Engineer',
+                        'DevOps Engineer'
+                    ]
+                };
+            }
+
+            return await this.request('/market-insights');
+
+        } catch (error) {
+            console.error(error);
+
+            this.showNotification(
+                `Insights Error: ${error.message}`,
+                'error'
+            );
+
+            return null;
+        }
+    }
+
+    // =============================================
+    // SAVE API KEY
+    // =============================================
+    saveApiKey() {
+        const input = document.getElementById('apiKeyInput');
+
+        if (!input) return;
+
+        const apiKey = input.value.trim();
+
+        if (!apiKey) {
+            this.showNotification(
+                'Please enter a valid API key',
+                'error'
+            );
+            return;
+        }
+
+        localStorage.setItem('resume_api_key', apiKey);
+
+        this.apiKey = apiKey;
+
+        this.closeModal();
+
+        this.showNotification(
+            'API key saved successfully!',
+            'success'
+        );
+    }
+
+    // =============================================
+    // API KEY MODAL
+    // =============================================
+    showAPIKeyModal() {
+        if (document.querySelector('.api-key-modal')) return;
+
+        const modal = document.createElement('div');
+
+        modal.className = 'api-key-modal';
+
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h2>🔐 API Configuration</h2>
+
+                <p>
+                    Enter your Resume Analyzer API key
+                    to enable AI-powered resume analysis.
+                </p>
+
+                <input
+                    type="password"
+                    id="apiKeyInput"
+                    placeholder="Enter API Key"
+                />
+
+                <div class="modal-buttons">
+                    <button id="saveKeyBtn">
+                        Save API Key
+                    </button>
+
+                    <button id="cancelBtn">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        document
+            .getElementById('saveKeyBtn')
+            .addEventListener('click', () =>
+                this.saveApiKey()
+            );
+
+        document
+            .getElementById('cancelBtn')
+            .addEventListener('click', () =>
+                this.closeModal()
+            );
+    }
+
+    // =============================================
+    // CLOSE MODAL
+    // =============================================
     closeModal() {
         const modal = document.querySelector('.api-key-modal');
+
         if (modal) {
             modal.remove();
         }
     }
 
-    // Show Notification
+    // =============================================
+    // NOTIFICATIONS
+    // =============================================
     showNotification(message, type = 'info') {
         const notification = document.createElement('div');
+
         notification.className = `notification notification-${type}`;
-        notification.textContent = message;
+
+        notification.innerHTML = `
+            <span>${message}</span>
+        `;
 
         document.body.appendChild(notification);
-        
-        // Remove notification with slideOut animation
+
         setTimeout(() => {
-            notification.style.animation = 'slideOut 0.3s ease';
+            notification.classList.add('hide');
+
             setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.remove();
-                }
+                notification.remove();
             }, 300);
         }, 3000);
     }
 
-    // Parse Resume using API (Demo Mode)
-    async parseResume(file) {
-        // Demo mode - return mock data
+    // =============================================
+    // MOCK METHODS (DEMO MODE)
+    // =============================================
+    async mockParseResume() {
         return new Promise((resolve) => {
             setTimeout(() => {
                 resolve({
-                    text: `John Doe\nSoftware Engineer\nExperience: 5 years\nSkills: JavaScript, Python, React, Node.js\nEducation: Bachelor of Science in Computer Science`
+                    text: `
+John Doe
+Software Engineer
+5 Years Experience
+
+Skills:
+JavaScript, React, Node.js, Python
+
+Education:
+B.Tech Computer Science
+                    `
                 });
             }, 1000);
         });
     }
 
-    // Analyze Resume using API (Demo Mode)
-    async analyzeResume(resumeText, targetRole, experience) {
-        // Demo mode - return mock analysis
+    async mockAnalyzeResume() {
         return new Promise((resolve) => {
             setTimeout(() => {
                 resolve({
-                    overall_score: 85,
+                    overall_score: 91,
+
                     metrics: {
-                        word_count: 450,
-                        ats_score: 88,
-                        skill_density: 75,
+                        ats_score: 89,
+                        skill_density: 82,
                         readability: 'Excellent'
                     },
+
                     skills: {
-                        found: ['JavaScript', 'Python', 'React', 'Node.js', 'AWS', 'Git'],
+                        found: [
+                            'JavaScript',
+                            'React',
+                            'Node.js',
+                            'Python'
+                        ],
+
                         missing: [
-                            { skill: 'Docker', priority: 'medium' },
-                            { skill: 'Kubernetes', priority: 'low' }
+                            {
+                                skill: 'Docker',
+                                priority: 'Medium'
+                            },
+                            {
+                                skill: 'AWS',
+                                priority: 'High'
+                            }
                         ]
                     },
+
                     recommendations: [
                         {
-                            title: 'Add More Technical Skills',
-                            description: 'Consider adding cloud technologies like Docker and Kubernetes to improve your profile.'
+                            title: 'Add Cloud Skills',
+                            description:
+                                'Add AWS and Docker experience.'
                         },
                         {
-                            title: 'Quantify Achievements',
-                            description: 'Add specific metrics and numbers to showcase your impact (e.g., "Improved performance by 40%").'
-                        }
-                    ],
-                    job_matches: [
-                        {
-                            title: 'Senior Software Engineer',
-                            company: 'Tech Corp',
-                            location: 'San Francisco, CA',
-                            match_percentage: 92
-                        },
-                        {
-                            title: 'Full Stack Developer',
-                            company: 'StartupXYZ',
-                            location: 'Remote',
-                            match_percentage: 85
+                            title: 'Improve Impact',
+                            description:
+                                'Add quantified achievements.'
                         }
                     ]
                 });
@@ -141,191 +528,85 @@ class ResumeAnalyzerAPI {
         });
     }
 
-    // Generate Resume using API (Demo Mode)
-    async generateResume(resumeData, template) {
-        // Demo mode - create HTML blob directly
+    async mockGenerateResume(resumeData, template) {
         return new Promise((resolve) => {
             setTimeout(() => {
-                const htmlContent = `
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Resume - ${resumeData.personal?.fullName || 'John Doe'}</title>
-                        <style>
-                            body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; }
-                            .header { text-align: center; margin-bottom: 30px; }
-                            .name { font-size: 28px; font-weight: bold; margin-bottom: 10px; }
-                            .contact { color: #666; font-size: 14px; }
-                            .section { margin-bottom: 25px; }
-                            .section-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #333; padding-bottom: 5px; }
-                            .item { margin-bottom: 15px; }
-                            .item-title { font-weight: bold; }
-                            .item-date { color: #666; font-style: italic; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="header">
-                            <div class="name">${resumeData.personal?.fullName || 'John Doe'}</div>
-                            <div class="contact">${resumeData.personal?.email || 'john@example.com'} • ${resumeData.personal?.phone || '+1-555-0123'}</div>
-                        </div>
-                        <div class="section">
-                            <div class="section-title">Professional Summary</div>
-                            <p>${resumeData.personal?.summary || 'Experienced software engineer with expertise in web development.'}</p>
-                        </div>
-                        <div class="section">
-                            <div class="section-title">Skills</div>
-                            <p>${resumeData.skills?.technical?.join(', ') || 'JavaScript, Python, React'}</p>
-                        </div>
-                    </body>
-                    </html>
+                const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>${resumeData?.personal?.fullName}</title>
+</head>
+<body>
+    <h1>${resumeData?.personal?.fullName}</h1>
+    <p>${resumeData?.personal?.email}</p>
+</body>
+</html>
                 `;
-                
-                const blob = new Blob([htmlContent], { type: 'text/html' });
+
+                const blob = new Blob([html], {
+                    type: 'text/html'
+                });
+
                 resolve(blob);
             }, 1000);
         });
     }
-
-    // Get Job Recommendations using API
-    async getJobRecommendations(skills, targetRole) {
-        try {
-            const response = await fetch(`${this.apiBase}/job-recommendations`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.apiKey}`
-                },
-                body: JSON.stringify({
-                    skills: skills,
-                    target_role: targetRole
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to get job recommendations');
-            }
-
-            return await response.json();
-        } catch (error) {
-            this.showNotification('Error getting job recommendations: ' + error.message, 'error');
-            return [];
-        }
-    }
-
-    // Get Market Insights using API
-    async getMarketInsights() {
-        try {
-            const response = await fetch(`${this.apiBase}/market-insights`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.apiKey}`
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to get market insights');
-            }
-
-            return await response.json();
-        } catch (error) {
-            this.showNotification('Error getting market insights: ' + error.message, 'error');
-            return null;
-        }
-    }
 }
 
-// Initialize API Service
-const resumeAPI = new ResumeAnalyzerAPI();
+// =============================================
+// INITIALIZE SERVICE
+// =============================================
 
-// Add CSS for modal and notifications
-const apiStyles = document.createElement('style');
-apiStyles.textContent = `
-    .api-key-modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.8);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-    }
+const resumeAPI = new ResumeAnalyzerAPI({
+    apiBase: 'https://api.resume-analyzer.com/v1',
+    timeout: 30000,
+    demoMode: true
+});
 
-    .modal-content {
-        background: white;
-        padding: 2rem;
-        border-radius: 12px;
-        max-width: 400px;
-        width: 90%;
-        text-align: center;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-    }
+// =============================================
+// GLOBAL CSS
+// =============================================
 
-    .modal-content h3 {
-        margin-bottom: 1rem;
-        color: #333;
-    }
+const styles = document.createElement('style');
 
-    .modal-content p {
-        margin-bottom: 1.5rem;
-        color: #666;
-        line-height: 1.5;
-    }
+styles.textContent = `
+/* =========================================
+   MODAL
+========================================= */
 
-    #apiKeyInput {
-        width: 100%;
-        padding: 0.75rem;
-        border: 2px solid #e2e8f0;
-        border-radius: 8px;
-        margin-bottom: 1.5rem;
-        font-size: 1rem;
-    }
+.api-key-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
 
-    #apiKeyInput:focus {
-        outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-    .modal-buttons {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-    }
+    z-index: 9999;
+}
 
-    .modal-buttons button {
-        padding: 0.75rem 1.5rem;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
+.modal-content {
+    background: white;
+    width: 90%;
+    max-width: 420px;
 
-    .modal-buttons button:first-child {
-        background: #667eea;
-        color: white;
-    }
+    padding: 2rem;
+    border-radius: 16px;
 
-    .modal-buttons button:first-child:hover {
-        background: #5a67d8;
-    }
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
 
-    .modal-buttons button:last-child {
-        background: #f7fafc;
-        color: #4a5568;
-        border: 1px solid #e2e8f0;
-    }
+    animation: popup 0.3s ease;
+}
 
-    .modal-buttons button:last-child:hover {
-        background: #edf2f7;
-    }
+.modal-content h2 {
+    margin-bottom: 1rem;
+}
 
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-`;
-document.head.appendChild(apiStyles);
+.modal-content p {
+    color: #666;
+    line-height: 1.6;
+}
+
+#
