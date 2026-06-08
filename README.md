@@ -232,7 +232,7 @@ This project is licensed under the MIT License.
 
 ## 👨‍💻 Developer
 
-**Prakash Rakamanna Alagundagi**
+**Prakash Alagundagi**
 
 * GitHub: https://github.com/prakashalagundagi
 * Email: [prakashalagundagi20@gmail.com](mailto:prakashalagundagi20@gmail.com)
